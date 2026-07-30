@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({ full_name: '', email: '', password: '', confirm: '' })
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -24,6 +25,10 @@ export default function RegisterPage() {
     }
     if (form.password.length < 8) {
       setError('Паролата трябва да е поне 8 символа.')
+      return
+    }
+    if (!agreed) {
+      setError('Трябва да се съгласиш с Общите условия и Политиката за поверителност.')
       return
     }
 
@@ -96,11 +101,32 @@ export default function RegisterPage() {
             </div>
           ))}
 
+          <label className="flex items-start gap-2.5 text-xs cursor-pointer select-none" style={{ color: 'var(--muted)' }}>
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={e => setAgreed(e.target.checked)}
+              className="mt-0.5 flex-shrink-0"
+              style={{ accentColor: 'var(--accent)', width: 16, height: 16, cursor: 'pointer' }}
+            />
+            <span>
+              Съгласен съм с{' '}
+              <Link href="/terms" target="_blank" style={{ color: 'var(--accent)' }} className="font-semibold">
+                Общите условия
+              </Link>{' '}
+              и{' '}
+              <Link href="/privacy" target="_blank" style={{ color: 'var(--accent)' }} className="font-semibold">
+                Политиката за поверителност
+              </Link>{' '}
+              на 3DPrintingBG, включително използването на бисквитки.
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !agreed}
             className="w-full py-3 rounded-lg text-sm font-bold transition-opacity"
-            style={{ background: 'var(--accent)', color: '#fff', opacity: loading ? 0.7 : 1 }}
+            style={{ background: 'var(--accent)', color: '#fff', opacity: (loading || !agreed) ? 0.5 : 1, cursor: (loading || !agreed) ? 'not-allowed' : 'pointer' }}
           >
             {loading ? 'Регистрация...' : 'Създай акаунт'}
           </button>

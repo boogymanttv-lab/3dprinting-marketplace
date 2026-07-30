@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/nav/Navbar'
+import { CookieConsent } from '@/components/CookieConsent'
 
 export const metadata: Metadata = {
   title: '3DPrintingBG — Маркетплейс за 3D принтиране',
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="pb-20 md:pb-0" suppressHydrationWarning>
         <Navbar />
         <main>{children}</main>
+        <CookieConsent />
       </body>
     </html>
   )

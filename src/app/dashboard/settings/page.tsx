@@ -492,6 +492,20 @@ export default function SettingsPage() {
           <LogOut size={15} /> Излез от акаунта
         </button>
       </div>
+
+      {/* Legal */}
+      <div className="rounded-2xl border mt-5 p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+        <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--muted)' }}>Правна информация</h3>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/terms" style={{ color: 'var(--accent)' }} className="font-semibold">
+            Общи условия
+          </Link>
+          <span style={{ color: 'var(--border)' }}>·</span>
+          <Link href="/privacy" style={{ color: 'var(--accent)' }} className="font-semibold">
+            Политика за поверителност
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
