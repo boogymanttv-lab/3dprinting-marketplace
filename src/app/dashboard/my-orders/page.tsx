@@ -48,7 +48,7 @@ export default async function MyOrdersPage() {
   const activeOrders = orders?.filter(o => !['completed', 'cancelled'].includes(o.status)) ?? []
   const pastOrders = orders?.filter(o => ['completed', 'cancelled'].includes(o.status)) ?? []
 
-  function OrderCard({ order, reviewed }: { order: typeof orders[0]; reviewed: boolean }) {
+  function OrderCard({ order, reviewed }: { order: NonNullable<typeof orders>[0]; reviewed: boolean }) {
     const statusStyle = ORDER_STATUS_COLORS[order.status as OrderStatus]
     const shipping = order.shipping_address as Record<string, string> | null
     const courierKey = shipping?.courier
