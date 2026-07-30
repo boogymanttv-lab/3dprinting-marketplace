@@ -117,7 +117,8 @@ export default function NewListingPage() {
     if (!shop) { setError('Нямаш магазин. Първо отвори магазин.'); setLoading(false); return }
 
     // Check listing limit
-    const maxListings = (shop.plan as { max_listings: number | null } | null)?.max_listings
+    const planData = Array.isArray(shop.plan) ? shop.plan[0] : shop.plan
+    const maxListings = (planData as { max_listings: number | null } | null)?.max_listings
     if (maxListings !== null && maxListings !== undefined) {
       const { count } = await supabase
         .from('listings')
