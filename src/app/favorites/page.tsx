@@ -18,9 +18,9 @@ export default async function FavoritesPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const listings = favorites
-    ?.map(f => f.listing)
-    .filter(Boolean) as Listing[]
+  const listings = (favorites
+    ?.map(f => Array.isArray(f.listing) ? f.listing[0] : f.listing)
+    .filter(Boolean) ?? []) as unknown as Listing[]
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">

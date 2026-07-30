@@ -29,14 +29,18 @@ export async function POST(request: Request) {
 
   const sellerEmail = (shop?.owner as { email?: string } | null)?.email
   if (buyer?.email && sellerEmail) {
-    await sendOrderConfirmation(buyer.email, sellerEmail, {
-      buyerName: buyer.full_name ?? 'Клиент',
-      shopName: shop?.name ?? '',
-      listingTitle: body.listing_title,
-      quantity: body.quantity,
-      total: body.total_amount,
-      orderId: order.id,
-    }).catch(() => {})
+    try {
+      await sendOrderConfirmation(buyer.email, sellerEmail, {
+        buyerName: buyer.full_name ?? 'Клиент',
+        shopName: shop?.name ?? '',
+        listingTitle: body.listing_title,
+        quantity: body.quantity,
+        total: body.total_amount,
+        orderId: order.id,
+      })
+    } catch {
+      // Email failure shouldn't break the order
+    }
   }
 
   return NextResponse.json({ order })
