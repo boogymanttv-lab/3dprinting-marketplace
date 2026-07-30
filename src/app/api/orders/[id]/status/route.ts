@@ -58,13 +58,15 @@ export async function POST(
 
   // Update shop total_sales when order is completed
   if (newStatus === 'completed' && order.total_amount) {
-    await admin.rpc('increment_shop_sales', {
-      p_shop_id: order.shop_id,
-      p_amount: order.total_amount,
-    }).catch(() => {
+    try {
+      await admin.rpc('increment_shop_sales', {
+        p_shop_id: order.shop_id,
+        p_amount: order.total_amount,
+      })
+    } catch {
       // Function may not exist yet — silent fail, doesn't break the flow
       console.warn('[orders/status] increment_shop_sales RPC not found')
-    })
+    }
   }
 
   // Send email to buyer
