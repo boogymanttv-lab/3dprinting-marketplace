@@ -31,7 +31,13 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Грешен имейл или парола.')
+      if (error.code === 'email_not_confirmed' || error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Имейлът ти още не е потвърден. Провери пощата си за линк за потвърждение.')
+      } else if (error.code === 'invalid_credentials') {
+        setError('Грешен имейл или парола.')
+      } else {
+        setError(error.message)
+      }
       setLoading(false)
       return
     }
