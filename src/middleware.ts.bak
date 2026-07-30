@@ -1,0 +1,2 @@
+// Deprecated — logic moved to src/proxy.ts (Next.js 16+)
+export {}

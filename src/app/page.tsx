@@ -1,0 +1,168 @@
+import { createClient } from '@/lib/supabase/server'
+import { ListingCard } from '@/components/listings/ListingCard'
+import { CategoryBar } from '@/components/listings/CategoryBar'
+import { SearchBar } from '@/components/search/SearchBar'
+import Link from 'next/link'
+import type { Listing, Shop, Category } from '@/types'
+
+export const revalidate = 60
+
+interface SearchParams { category?: string; sub?: string; q?: string; tab?: string }
+
+export default async function HomePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const params = await searchParams
+  const tab = params.tab ?? 'listings'
+  const supabase = await createClient()
+
+  // Fetch categories
+  const { data: allCategories } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort_order')
+
+  const parentCats = allCategories?.filter(c => !c.parent_id) ?? []
+  const subCats = allCategories?.filter(c => c.parent_id) ?? []
+
+  // Build query for listings
+  let listingsQuery = supabase
+    .from('listings')
+    .select('*, shop:shops(id, name, city, rating), category:categories(id, name, slug)')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(24)
+
+  if (params.q) {
+    listingsQuery = listingsQuery.textSearch('title', params.q, { type: 'websearch' })
+  }
+  if (params.sub) {
+    const cat = allCategories?.find(c => c.slug === params.sub)
+    if (cat) listingsQuery = listingsQuery.eq('category_id', cat.id)
+  } else if (params.category) {
+    const parent = allCategories?.find(c => c.slug === params.category)
+    if (parent) {
+      const childIds = allCategories?.filter(c => c.parent_id === parent.id).map(c => c.id) ?? []
+      if (childIds.length > 0) {
+        listingsQuery = listingsQuery.in('category_id', [parent.id, ...childIds])
+      }
+    }
+  }
+
+  const { data: listings } = await listingsQuery
+
+  // Fetch shops
+  const { data: shops } = await supabase
+    .from('shops')
+    .select('*, plan:plans(name)')
+    .eq('is_active', true)
+    .order('rating', { ascending: false })
+    .limit(12)
+
+  return (
+    <div>
+      {/* Hero */}
+      <section
+        className="border-b py-14 px-4 text-center"
+        style={{ background: 'linear-gradient(180deg, rgba(249,115,22,0.06) 0%, transparent 100%)', borderColor: 'var(--border)' }}
+      >
+        <h1 className="text-4xl md:text-6xl font-black leading-tight mb-3 tracking-tight">
+          Пазарът за<br />
+          <span style={{ color: 'var(--accent)' }}>3D принтиране</span>
+        </h1>
+        <p className="text-base md:text-lg mb-8 max-w-md mx-auto" style={{ color: 'var(--muted)' }}>
+          Купувай и продавай филамент, принтери и 3D принтирани продукти
+        </p>
+        <SearchBar defaultValue={params.q} />
+      </section>
+
+      {/* Category chips */}
+      <CategoryBar
+        categories={parentCats as Category[]}
+        subCategories={subCats as Category[]}
+        activeCategory={params.category}
+        activeSub={params.sub}
+      />
+
+      {/* Tabs */}
+      <div
+        className="px-4 max-w-7xl mx-auto flex gap-1 border-b mt-4"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        {[
+          { label: '📋 Обяви', key: 'listings' },
+          { label: '🏪 Онлайн магазини', key: 'stores' },
+        ].map(t => (
+          <Link
+            key={t.key}
+            href={`/?tab=${t.key}${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`}
+            className="px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors"
+            style={{
+              color: tab === t.key ? 'var(--accent)' : 'var(--muted)',
+              borderBottomColor: tab === t.key ? 'var(--accent)' : 'transparent',
+            }}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 py-7">
+        {tab === 'listings' ? (
+          <>
+            {listings && listings.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {listings.map(l => (
+                  <ListingCard key={l.id} listing={l as Listing} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-24" style={{ color: 'var(--muted)' }}>
+                <div className="text-5xl mb-4">📭</div>
+                <p className="font-semibold">Няма намерени обяви</p>
+                <p className="text-sm mt-1">Опитай с различни ключови думи</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {shops?.map(shop => (
+              <Link key={shop.id} href={`/stores/${shop.slug}`}>
+                <div
+                  className="rounded-2xl border p-6 transition-all hover:-translate-y-0.5 cursor-pointer"
+                  style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
+                >
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3"
+                    style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                    🏪
+                  </div>
+                  <h3 className="text-base font-bold mb-1">{shop.name}</h3>
+                  <p className="text-xs mb-3 line-clamp-2" style={{ color: 'var(--muted)' }}>
+                    {shop.description ?? 'Без описание'}
+                  </p>
+                  <div className="flex gap-5">
+                    <div>
+                      <div className="text-lg font-black" style={{ color: 'var(--accent)' }}>{shop.total_sales}</div>
+                      <div className="text-xs" style={{ color: 'var(--muted)' }}>Продажби</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-black" style={{ color: 'var(--accent)' }}>
+                        {shop.rating > 0 ? shop.rating.toFixed(1) : '—'}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--muted)' }}>Рейтинг ⭐</div>
+                    </div>
+                    {shop.city && (
+                      <div>
+                        <div className="text-sm font-semibold">📍 {shop.city}</div>
+                        <div className="text-xs" style={{ color: 'var(--muted)' }}>Локация</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
