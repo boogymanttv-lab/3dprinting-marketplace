@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { CategoryBar } from '@/components/listings/CategoryBar'
@@ -75,12 +76,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </section>
 
       {/* Category chips */}
-      <CategoryBar
-        categories={parentCats as Category[]}
-        subCategories={subCats as Category[]}
-        activeCategory={params.category}
-        activeSub={params.sub}
-      />
+      <Suspense>
+        <CategoryBar
+          categories={parentCats as Category[]}
+          subCategories={subCats as Category[]}
+          activeCategory={params.category}
+          activeSub={params.sub}
+        />
+      </Suspense>
 
       {/* Tabs */}
       <div
