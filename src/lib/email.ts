@@ -145,6 +145,7 @@ export async function sendStatusUpdate(
     status: string
     statusLabel: string
     orderId: string
+    trackingNumber?: string
   }
 ) {
   const resend = await getResend()

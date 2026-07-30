@@ -71,14 +71,18 @@ export async function POST(
 
   // Send email to buyer
   if (order.buyer?.email) {
-    await sendStatusUpdate(order.buyer.email, {
-      buyerName: order.buyer.full_name ?? 'Клиент',
-      listingTitle: order.listing_title,
-      status: newStatus,
-      statusLabel: ORDER_STATUS_LABELS[newStatus as OrderStatus] ?? newStatus,
-      orderId: id,
-      trackingNumber: newStatus === 'shipped' && trackingNumber ? trackingNumber : undefined,
-    }).catch(() => {})
+    try {
+      await sendStatusUpdate(order.buyer.email, {
+        buyerName: order.buyer.full_name ?? 'Клиент',
+        listingTitle: order.listing_title,
+        status: newStatus,
+        statusLabel: ORDER_STATUS_LABELS[newStatus as OrderStatus] ?? newStatus,
+        orderId: id,
+        trackingNumber: newStatus === 'shipped' && trackingNumber ? trackingNumber : undefined,
+      })
+    } catch {
+      // Email send failure shouldn't break the flow
+    }
   }
 
   const referer = request.headers.get('referer') || '/dashboard/orders'
