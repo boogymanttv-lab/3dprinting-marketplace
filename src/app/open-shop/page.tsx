@@ -14,11 +14,7 @@ function OpenShopForm() {
   const searchParams = useSearchParams()
   const planId = searchParams.get('plan')
   const interval = (searchParams.get('interval') === 'yearly' ? 'yearly' : 'monthly') as 'monthly' | 'yearly'
-
-  if (!planId) {
-    router.replace('/plans')
-    return null
-  }
+  const cancelled = searchParams.get('cancelled') === '1'
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
@@ -33,10 +29,21 @@ function OpenShopForm() {
   const [shopSlug, setShopSlug] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Redirect if no plan selected, or if we're bouncing back from a cancelled Stripe checkout
+  useEffect(() => {
+    if (!planId || cancelled) {
+      router.replace(cancelled ? '/plans?cancelled=1' : '/plans')
+    }
+  }, [planId, cancelled])
+
   // Cleanup timer on unmount
   useEffect(() => {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
+
+  if (!planId || cancelled) {
+    return null
+  }
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -50,6 +57,8 @@ function OpenShopForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim()) { setError('Въведи име на магазина.'); return }
+    if (!form.city.trim()) { setError('Въведи град.'); return }
+    if (!form.phone.trim()) { setError('Въведи телефон.'); return }
 
     setLoading(true)
     setError('')
@@ -345,31 +354,36 @@ function OpenShopForm() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Град</label>
+                <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Град *</label>
                 <input className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none" style={inputStyle}
-                  value={form.city} onChange={update('city')} placeholder="София"
+                  value={form.city} onChange={update('city')} placeholder="София" required
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'}
                 />
               </div>
               <div>
-                <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>
-                  Телефон <span className="text-xs px-1.5 py-0.5 rounded ml-1" style={{ background: 'var(--bg3)', color: 'var(--muted)' }}>по избор</span>
-                </label>
+                <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Телефон *</label>
                 <input className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none" style={inputStyle}
-                  value={form.phone} onChange={update('phone')} placeholder="+359..." type="tel"
+                  value={form.phone} onChange={update('phone')} placeholder="+359..." type="tel" required
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                   onBlur={e => e.target.style.borderColor = 'var(--border)'}
                 />
               </div>
             </div>
 
+            {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+
             <div className="flex gap-3 pt-2">
               <Link href="/plans" className="flex-1 py-2.5 text-center rounded-xl text-sm font-semibold"
                 style={{ border: '1px solid var(--border)', color: 'var(--muted)', textDecoration: 'none' }}>
                 ← Смени план
               </Link>
-              <button type="button" onClick={() => { if (!form.name.trim()) { setError('Въведи име.'); return }; setError(''); setStep(2) }}
+              <button type="button" onClick={() => {
+                if (!form.name.trim()) { setError('Въведи име на магазина.'); return }
+                if (!form.city.trim()) { setError('Въведи град.'); return }
+                if (!form.phone.trim()) { setError('Въведи телефон.'); return }
+                setError(''); setStep(2)
+              }}
                 className="flex-[2] py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: 'var(--accent)', color: '#fff', border: 'none' }}>
                 Продължи →

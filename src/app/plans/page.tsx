@@ -2,7 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { PlansGrid } from '@/components/plans/PlansGrid'
 import type { Plan } from '@/types'
 
-export default async function PlansPage() {
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cancelled?: string }>
+}) {
+  const params = await searchParams
+  const cancelled = params.cancelled === '1'
+
   const supabase = await createClient()
   const { data: plans } = await supabase
     .from('plans')
@@ -11,6 +18,15 @@ export default async function PlansPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
+      {cancelled && (
+        <div
+          className="max-w-2xl mx-auto mb-8 rounded-xl px-5 py-3.5 text-sm text-center font-semibold"
+          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
+        >
+          ❌ Плащането беше отказано. Избери план по-долу, за да опиташ отново.
+        </div>
+      )}
+
       {/* Progress steps */}
       <div className="flex items-center justify-center gap-0 mb-10">
         {[
