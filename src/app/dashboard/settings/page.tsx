@@ -9,6 +9,52 @@ import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, Credi
 
 type Tab = 'profile' | 'shop' | 'company' | 'billing' | 'password'
 
+const inputStyle = {
+  background: 'var(--bg2)',
+  border: '1px solid var(--border)',
+  color: 'var(--text)',
+}
+
+// Дефинирани извън компонента — ако бяха вътре, React ги пресъздава при
+// всеки render (нов component type всеки път), което demount-ва <input>-а
+// при всяко натискане на клавиш и губи фокус (клавиатурата се затваря).
+function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
+  label: string; value: string; onChange: (v: string) => void;
+  type?: string; placeholder?: string
+}) {
+  return (
+    <div>
+      <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
+      <input
+        type={type} value={value} placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none transition-colors"
+        style={inputStyle}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+      />
+    </div>
+  )
+}
+
+function TextArea({ label, value, onChange, placeholder = '' }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string
+}) {
+  return (
+    <div>
+      <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
+      <textarea
+        rows={3} value={value} placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none resize-none transition-colors"
+        style={inputStyle}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+      />
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -304,12 +350,6 @@ export default function SettingsPage() {
     setPortalLoading(false)
   }
 
-  const inputStyle = {
-    background: 'var(--bg2)',
-    border: '1px solid var(--border)',
-    color: 'var(--text)',
-  }
-
   const tabs: { key: Tab; icon: React.ReactNode; label: string; show?: boolean }[] = [
     { key: 'profile', icon: <User size={16} />, label: 'Профил' },
     { key: 'shop', icon: <Store size={16} />, label: 'Магазин', show: hasShop },
@@ -317,43 +357,6 @@ export default function SettingsPage() {
     { key: 'billing', icon: <CreditCard size={16} />, label: 'Абонамент', show: hasShop },
     { key: 'password', icon: <Lock size={16} />, label: 'Парола' },
   ]
-
-  function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
-    label: string; value: string; onChange: (v: string) => void;
-    type?: string; placeholder?: string
-  }) {
-    return (
-      <div>
-        <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
-        <input
-          type={type} value={value} placeholder={placeholder}
-          onChange={e => onChange(e.target.value)}
-          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none transition-colors"
-          style={inputStyle}
-          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
-        />
-      </div>
-    )
-  }
-
-  function TextArea({ label, value, onChange, placeholder = '' }: {
-    label: string; value: string; onChange: (v: string) => void; placeholder?: string
-  }) {
-    return (
-      <div>
-        <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>{label}</label>
-        <textarea
-          rows={3} value={value} placeholder={placeholder}
-          onChange={e => onChange(e.target.value)}
-          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none resize-none transition-colors"
-          style={inputStyle}
-          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
