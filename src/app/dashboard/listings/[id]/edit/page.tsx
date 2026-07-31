@@ -57,7 +57,7 @@ export default function EditListingPage() {
       if (!user) { router.push('/login'); return }
 
       const { data: shop } = await supabase
-        .from('shops').select('id').eq('owner_id', user.id).single()
+        .from('shops').select('id').eq('owner_id', user.id).maybeSingle()
       if (!shop) { router.push('/dashboard'); return }
 
       const { data: listing } = await supabase
@@ -65,7 +65,7 @@ export default function EditListingPage() {
         .select('*, category:categories(id, parent_id)')
         .eq('id', id)
         .eq('shop_id', shop.id)
-        .single()
+        .maybeSingle()
 
       if (!listing) { router.push('/dashboard/listings'); return }
 

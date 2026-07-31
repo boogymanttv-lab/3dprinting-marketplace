@@ -30,7 +30,7 @@ export async function POST(
     .from('orders')
     .select('*, shop:shops(owner_id, name), buyer:profiles(full_name, email)')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
   if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (order.shop?.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

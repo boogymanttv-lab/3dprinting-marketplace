@@ -54,7 +54,7 @@ function MessagesContent() {
         .from('shops')
         .select('id')
         .eq('owner_id', data.user.id)
-        .single()
+        .maybeSingle()
       if (shop) setShopId(shop.id)
 
       loadConversations(data.user.id, shop?.id)

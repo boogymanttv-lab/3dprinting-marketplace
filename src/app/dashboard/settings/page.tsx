@@ -40,7 +40,7 @@ export default function SettingsPage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (profileData) {
         setProfile({
@@ -55,7 +55,7 @@ export default function SettingsPage() {
         .from('shops')
         .select('*')
         .eq('owner_id', user.id)
-        .single()
+        .maybeSingle()
 
       if (shopData) {
         setHasShop(true)

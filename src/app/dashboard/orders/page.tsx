@@ -30,7 +30,7 @@ export default async function OrdersPage({ searchParams }: Props) {
     .from('shops')
     .select('id, name')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) redirect('/open-shop')
 

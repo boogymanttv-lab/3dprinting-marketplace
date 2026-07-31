@@ -23,7 +23,7 @@ export function FavoriteButton({ listingId }: Props) {
         .select('listing_id')
         .eq('user_id', data.user.id)
         .eq('listing_id', listingId)
-        .single()
+        .maybeSingle()
         .then(({ data: fav }) => setIsFav(!!fav))
     })
   }, [listingId])

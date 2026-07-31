@@ -15,7 +15,7 @@ export default async function ReviewsPage() {
     .from('shops')
     .select('id, name, rating, review_count')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) redirect('/open-shop')
 

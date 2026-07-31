@@ -17,7 +17,7 @@ export async function POST(
     .from('shops')
     .select('id')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'))
 

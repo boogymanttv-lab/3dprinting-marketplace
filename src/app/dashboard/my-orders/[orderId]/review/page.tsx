@@ -22,7 +22,7 @@ export default async function ReviewPage({ params }: Props) {
     .eq('id', orderId)
     .eq('buyer_id', user.id)
     .eq('status', 'completed')
-    .single()
+    .maybeSingle()
 
   if (!order) redirect('/dashboard/my-orders')
 
@@ -31,7 +31,7 @@ export default async function ReviewPage({ params }: Props) {
     .from('reviews')
     .select('id')
     .eq('order_id', orderId)
-    .single()
+    .maybeSingle()
 
   if (existing) redirect('/dashboard/my-orders')
 

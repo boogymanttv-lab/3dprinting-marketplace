@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     .from('shops')
     .select('*, plan:plans(*)')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) redirect('/open-shop')
 

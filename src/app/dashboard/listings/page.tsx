@@ -18,7 +18,7 @@ export default async function ListingsPage() {
     .from('shops')
     .select('id, name, plan:plans(max_listings)')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) redirect('/open-shop')
 

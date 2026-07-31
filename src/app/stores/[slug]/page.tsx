@@ -17,7 +17,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     .select('*, plan:plans(name, id), owner:profiles(full_name, created_at)')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
   if (!shop) notFound()
 

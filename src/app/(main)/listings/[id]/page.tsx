@@ -21,7 +21,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     `)
     .eq('id', id)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
   if (!listing) notFound()
 

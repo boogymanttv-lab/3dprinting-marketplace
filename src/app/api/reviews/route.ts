@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     .eq('id', orderId)
     .eq('buyer_id', user.id)
     .eq('status', 'completed')
-    .single()
+    .maybeSingle()
 
   if (!order) {
     return NextResponse.json({ error: 'Поръчката не е намерена или не е завършена' }, { status: 403 })
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     .from('reviews')
     .select('id')
     .eq('order_id', orderId)
-    .single()
+    .maybeSingle()
 
   if (existing) {
     return NextResponse.json({ error: 'Вече имаш ревю за тази поръчка' }, { status: 409 })

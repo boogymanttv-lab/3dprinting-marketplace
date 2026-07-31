@@ -16,7 +16,7 @@ export async function POST(
     .from('shops')
     .select('id')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!shop) return NextResponse.json({ error: 'No shop' }, { status: 403 })
 
@@ -26,7 +26,7 @@ export async function POST(
     .select('is_active')
     .eq('id', id)
     .eq('shop_id', shop.id)
-    .single()
+    .maybeSingle()
 
   if (!listing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 

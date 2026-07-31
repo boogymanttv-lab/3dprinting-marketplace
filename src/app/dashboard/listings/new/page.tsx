@@ -112,7 +112,7 @@ export default function NewListingPage() {
       .from('shops')
       .select('id, plan:plans(max_listings)')
       .eq('owner_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!shop) { setError('Нямаш магазин. Първо отвори магазин.'); setLoading(false); return }
 

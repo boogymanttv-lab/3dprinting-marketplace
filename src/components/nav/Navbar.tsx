@@ -27,7 +27,7 @@ export function Navbar() {
           .from('shops')
           .select('id')
           .eq('owner_id', data.user.id)
-          .single()
+          .maybeSingle()
           .then(({ data: shop }) => setHasShop(!!shop))
       }
     })
