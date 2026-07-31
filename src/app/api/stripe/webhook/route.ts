@@ -43,6 +43,51 @@ export async function POST(request: Request) {
           if (currentPeriodEnd) periodEnd = new Date(currentPeriodEnd * 1000).toISOString()
         }
 
+        if (meta.mode === 'order_payment') {
+          // Buyer paid with card for an order — create the order now, mirroring
+          // the pay-before-create-shop pattern (nothing written to Supabase
+          // before the payment actually succeeded).
+          const paymentIntentId =
+            typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null
+
+          // Idempotency: webhook can be retried by Stripe.
+          if (paymentIntentId) {
+            const { data: alreadyExists } = await admin
+              .from('orders')
+              .select('id')
+              .eq('stripe_payment_intent_id', paymentIntentId)
+              .maybeSingle()
+            if (alreadyExists) break
+          }
+
+          const quantity = parseInt(meta.quantity ?? '1', 10) || 1
+          const listingPrice = parseFloat(meta.listing_price ?? '0') || 0
+          const totalAmount = listingPrice * quantity
+          const platformFee = Math.round(totalAmount * 0.10 * 100) / 100
+          const sellerAmount = Math.round((totalAmount - platformFee) * 100) / 100
+
+          await admin.from('orders').insert({
+            listing_id: meta.listing_id,
+            shop_id: meta.shop_id,
+            buyer_id: meta.buyer_id,
+            listing_title: meta.listing_title || '',
+            listing_price: listingPrice,
+            listing_image: meta.listing_image || null,
+            quantity,
+            total_amount: totalAmount,
+            payment_method: 'card',
+            stripe_payment_intent_id: paymentIntentId,
+            platform_fee: platformFee,
+            seller_amount: sellerAmount,
+            shipping_address: meta.delivery_type === 'in_person'
+              ? { delivery_type: 'in_person' }
+              : { courier: meta.courier || null, delivery_type: meta.delivery_type || null, address: meta.address || '' },
+            needs_invoice: meta.needs_invoice === 'true',
+            status: 'new',
+          })
+          break
+        }
+
         if (meta.mode === 'create_shop') {
           // New shop — create it now that payment succeeded.
           const ownerId = meta.owner_id
@@ -109,6 +154,16 @@ export async function POST(request: Request) {
           billing_interval: null,
           plan_expires_at: null,
         }).eq('stripe_subscription_id', sub.id)
+        break
+      }
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account
+        await admin.from('shops').update({
+          stripe_connect_onboarded: !!account.details_submitted,
+          stripe_connect_charges_enabled: !!account.charges_enabled,
+          stripe_connect_payouts_enabled: !!account.payouts_enabled,
+        }).eq('stripe_connect_account_id', account.id)
         break
       }
 

@@ -9,6 +9,7 @@ import type { Listing } from '@/types'
 interface OrderFormProps {
   listing: Listing
   shopHasInvoice: boolean
+  cardEnabled: boolean
 }
 
 type PaymentMethod = 'card' | 'cod' | 'in_person'
@@ -27,17 +28,21 @@ const DELIVERY_OPTIONS: { key: DeliveryType; label: string }[] = [
   { key: 'in_person', label: '🤝 Лично предаване' },
 ]
 
-// Which payment methods are allowed per delivery type
-// Плащането с карта за поръчки (не за абонаменти — тези вече работят) е
-// планирано за по-нататък (Stripe Connect за разпределяне към продавачите).
-// Засега е закоментирано — само го разкоментирай, когато е готово.
-const ALLOWED_PAYMENTS: Record<DeliveryType, { key: PaymentMethod; label: string }[]> = {
-  office:    [/* { key: 'card', label: '💳 С карта' }, */ { key: 'cod', label: '💵 Наложен платеж' }],
-  address:   [/* { key: 'card', label: '💳 С карта' }, */ { key: 'cod', label: '💵 Наложен платеж' }],
-  in_person: [{ key: 'in_person', label: '🤝 Лично' }],
+// Which payment methods are allowed per delivery type. Card payments
+// (via Stripe Connect) only show up if the seller has completed onboarding
+// — see `cardEnabled` prop, driven by shops.stripe_connect_charges_enabled.
+function allowedPayments(cardEnabled: boolean): Record<DeliveryType, { key: PaymentMethod; label: string }[]> {
+  const card = { key: 'card' as const, label: '💳 С карта' }
+  const cod = { key: 'cod' as const, label: '💵 Наложен платеж' }
+  return {
+    office:    cardEnabled ? [card, cod] : [cod],
+    address:   cardEnabled ? [card, cod] : [cod],
+    in_person: [{ key: 'in_person', label: '🤝 Лично' }],
+  }
 }
 
-export function OrderForm({ listing, shopHasInvoice }: OrderFormProps) {
+export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormProps) {
+  const ALLOWED_PAYMENTS = allowedPayments(cardEnabled)
   const router = useRouter()
   const [qty, setQty] = useState(1)
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('office')
@@ -73,6 +78,33 @@ export function OrderForm({ listing, shopHasInvoice }: OrderFormProps) {
 
     if (needsCourier && !address.trim()) {
       setError(deliveryType === 'office' ? 'Моля въведи офис за доставка.' : 'Моля въведи адрес за доставка.')
+      setLoading(false)
+      return
+    }
+
+    if (payment === 'card') {
+      try {
+        const res = await fetch('/api/stripe/order-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            listingId: listing.id,
+            quantity: qty,
+            deliveryType,
+            courier: needsCourier ? courier : undefined,
+            address: needsCourier ? address : undefined,
+            needsInvoice,
+          }),
+        })
+        const data = await res.json()
+        if (data.url) {
+          window.location.href = data.url
+          return
+        }
+        setError(data.error || 'Грешка при връзка със Stripe.')
+      } catch {
+        setError('Грешка при връзка със Stripe.')
+      }
       setLoading(false)
       return
     }

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink, PauseCircle, Trash2, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink, PauseCircle, Trash2, AlertTriangle, Landmark, CheckCircle2 } from 'lucide-react'
 
 type Tab = 'profile' | 'shop' | 'company' | 'billing' | 'password'
 
@@ -35,6 +35,11 @@ export default function SettingsPage() {
     expiresAt: string | null; hasStripeCustomer: boolean
   } | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [connect, setConnect] = useState<{
+    onboarded: boolean; chargesEnabled: boolean; payoutsEnabled: boolean; hasAccount: boolean
+  } | null>(null)
+  const [connectLoading, setConnectLoading] = useState(false)
+  const [connectError, setConnectError] = useState('')
   const [accountModal, setAccountModal] = useState<'deactivate' | 'delete' | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [accountActionLoading, setAccountActionLoading] = useState(false)
@@ -91,6 +96,12 @@ export default function SettingsPage() {
           interval: shopData.billing_interval ?? null,
           expiresAt: shopData.plan_expires_at ?? null,
           hasStripeCustomer: !!shopData.stripe_customer_id,
+        })
+        setConnect({
+          hasAccount: !!shopData.stripe_connect_account_id,
+          onboarded: !!shopData.stripe_connect_onboarded,
+          chargesEnabled: !!shopData.stripe_connect_charges_enabled,
+          payoutsEnabled: !!shopData.stripe_connect_payouts_enabled,
         })
       }
     }
@@ -239,6 +250,41 @@ export default function SettingsPage() {
       setAccountActionError('Грешка при изтриване на акаунта.')
       setAccountActionLoading(false)
     }
+  }
+
+  async function startConnectOnboarding() {
+    setConnectLoading(true)
+    setConnectError('')
+    try {
+      const res = await fetch('/api/stripe/connect/onboard', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      setConnectError(data.error || 'Грешка при връзка със Stripe.')
+    } catch {
+      setConnectError('Грешка при връзка със Stripe.')
+    }
+    setConnectLoading(false)
+  }
+
+  async function openConnectDashboard() {
+    setConnectLoading(true)
+    setConnectError('')
+    try {
+      const res = await fetch('/api/stripe/connect/dashboard', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.open(data.url, '_blank')
+        setConnectLoading(false)
+        return
+      }
+      setConnectError(data.error || 'Грешка при отваряне на Stripe.')
+    } catch {
+      setConnectError('Грешка при отваряне на Stripe.')
+    }
+    setConnectLoading(false)
   }
 
   async function openBillingPortal() {
@@ -568,6 +614,47 @@ export default function SettingsPage() {
                 </button>
               )}
             </div>
+
+            {/* Stripe Connect — плащания с карта от купувачи */}
+            {connect && (
+              <div className="rounded-xl p-4 mt-2" style={{ background: 'var(--bg2)', border: '1px solid var(--border)' }}>
+                <h3 className="font-bold flex items-center gap-2 mb-1.5"><Landmark size={15} /> Плащания с карта от купувачи</h3>
+                <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
+                  Свържи се със Stripe, за да можеш да получаваш плащания с карта директно за поръчките си
+                  (в допълнение на наложен платеж). Платформата удържа 10% комисионна на поръчка, останалото
+                  отива директно към теб.
+                </p>
+
+                {connect.chargesEnabled ? (
+                  <div className="rounded-lg px-3 py-2.5 text-xs flex items-center gap-2 mb-3"
+                    style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}>
+                    <CheckCircle2 size={14} /> Свързан — купувачите вече могат да плащат с карта
+                  </div>
+                ) : connect.hasAccount ? (
+                  <div className="rounded-lg px-3 py-2.5 text-xs mb-3"
+                    style={{ background: 'rgba(234,179,8,0.1)', color: '#eab308', border: '1px solid rgba(234,179,8,0.2)' }}>
+                    ⏳ Регистрацията в Stripe е започната, но не е завършена — довърши стъпките по-долу.
+                  </div>
+                ) : null}
+
+                {connectError && <p className="text-xs mb-3" style={{ color: '#f87171' }}>{connectError}</p>}
+
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={startConnectOnboarding} disabled={connectLoading}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity"
+                    style={{ background: 'var(--accent)', color: '#fff', border: 'none', opacity: connectLoading ? 0.7 : 1 }}>
+                    {connectLoading ? 'Зареждане...' : connect.hasAccount ? 'Довърши регистрацията' : 'Свържи се със Stripe'}
+                  </button>
+                  {connect.chargesEnabled && (
+                    <button onClick={openConnectDashboard} disabled={connectLoading}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity"
+                      style={{ border: '1.5px solid var(--border)', color: 'var(--text)', background: 'transparent', opacity: connectLoading ? 0.7 : 1 }}>
+                      <ExternalLink size={15} /> Stripe табло
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 

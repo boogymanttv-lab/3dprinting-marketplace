@@ -115,7 +115,11 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               <span>{formatRelativeTime(l.created_at)}</span>
             </div>
 
-            <OrderForm listing={l as Listing} shopHasInvoice={!!l.shop?.eik} />
+            <OrderForm
+              listing={l as Listing}
+              shopHasInvoice={!!l.shop?.eik}
+              cardEnabled={!!l.shop?.stripe_connect_charges_enabled}
+            />
 
             {/* Share */}
             <ShareButton url={shareUrl} />

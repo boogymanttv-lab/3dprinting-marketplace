@@ -62,6 +62,10 @@ export interface Shop {
   billing_interval: BillingInterval | null
   stripe_customer_id?: string | null
   stripe_subscription_id?: string | null
+  stripe_connect_account_id?: string | null
+  stripe_connect_onboarded?: boolean
+  stripe_connect_charges_enabled?: boolean
+  stripe_connect_payouts_enabled?: boolean
   total_sales: number
   rating: number
   review_count: number
