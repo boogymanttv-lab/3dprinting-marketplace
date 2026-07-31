@@ -20,31 +20,36 @@ export function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
+  // Fetch/refresh auth user (once) + subscribe to auth changes
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user)
-      if (data.user) {
-        supabase
-          .from('shops')
-          .select('id')
-          .eq('owner_id', data.user.id)
-          .maybeSingle()
-          .then(({ data: shop }) => setHasShop(!!shop))
-
-        supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .maybeSingle()
-          .then(({ data: profile }) => setIsAdmin(!!profile?.role && profile.role !== 'user'))
-      }
-    })
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // Re-check shop/role whenever the user changes OR the route changes
+  // (e.g. right after creating a shop) — Navbar stays mounted across
+  // client-side navigation, so this can't just run once on mount.
+  useEffect(() => {
+    if (!user) { setHasShop(false); setIsAdmin(false); return }
+
+    supabase
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+      .then(({ data: shop }) => setHasShop(!!shop))
+
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data: profile }) => setIsAdmin(!!profile?.role && profile.role !== 'user'))
+  }, [user, pathname])
 
   // Close dropdown when clicking outside
   useEffect(() => {
