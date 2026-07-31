@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, Search } from 'lucide-react'
 
 export const revalidate = 60
@@ -99,10 +100,13 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
               >
                 {/* Avatar */}
                 <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 overflow-hidden relative flex-shrink-0"
+                  style={{ background: shop.logo_url ? 'var(--bg3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
                 >
-                  🏪
+                  {shop.logo_url
+                    ? <Image src={shop.logo_url} alt={`${shop.name} лого`} fill className="object-cover" />
+                    : <span>🏪</span>
+                  }
                 </div>
 
                 {/* Name + Plan */}
