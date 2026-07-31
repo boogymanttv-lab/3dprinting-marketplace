@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice, formatRelativeTime } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, type OrderStatus } from '@/types'
 import { Plus, Package, ShoppingBag, Star, TrendingUp } from 'lucide-react'
@@ -47,9 +48,12 @@ export default async function DashboardPage() {
       {/* Sidebar */}
       <aside>
         <div className="rounded-2xl border p-5 mb-4" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-3"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-            🏪
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-3 overflow-hidden relative flex-shrink-0"
+            style={{ background: shop.logo_url ? 'var(--bg3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+            {shop.logo_url
+              ? <Image src={shop.logo_url} alt={`${shop.name} лого`} fill className="object-cover" />
+              : <span>🏪</span>
+            }
           </div>
           <p className="font-bold text-base">{shop.name}</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>

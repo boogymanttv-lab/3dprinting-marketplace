@@ -4,6 +4,7 @@ import { ListingCard } from '@/components/listings/ListingCard'
 import { CategoryBar } from '@/components/listings/CategoryBar'
 import { SearchBar } from '@/components/search/SearchBar'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Listing, Shop, Category } from '@/types'
 
 export const revalidate = 60
@@ -145,9 +146,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   className="rounded-2xl border p-6 transition-all hover:-translate-y-0.5 cursor-pointer"
                   style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
                 >
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3"
-                    style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                    🏪
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3 overflow-hidden relative flex-shrink-0"
+                    style={{ background: shop.logo_url ? 'var(--bg3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                    {shop.logo_url
+                      ? <Image src={shop.logo_url} alt={`${shop.name} лого`} fill className="object-cover" />
+                      : <span>🏪</span>
+                    }
                   </div>
                   <h3 className="text-base font-bold mb-1">{shop.name}</h3>
                   <p className="text-xs mb-3 line-clamp-2" style={{ color: 'var(--muted)' }}>

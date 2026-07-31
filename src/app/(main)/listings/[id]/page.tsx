@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice, formatRelativeTime } from '@/lib/utils'
 import { OrderForm } from './OrderForm'
 import { ReviewsList } from './ReviewsList'
@@ -128,9 +129,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* Seller Card */}
           <div className="rounded-2xl border p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                🏪
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 overflow-hidden relative"
+                style={{ background: l.shop.logo_url ? 'var(--bg3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                {l.shop.logo_url
+                  ? <Image src={l.shop.logo_url} alt={`${l.shop.name} лого`} fill className="object-cover" />
+                  : <span>🏪</span>
+                }
               </div>
               <div>
                 <p className="font-bold">{l.shop.name}</p>
