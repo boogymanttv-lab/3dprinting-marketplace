@@ -78,10 +78,10 @@ export function Navbar() {
         className="sticky top-0 z-50 border-b"
         style={{ background: 'rgba(15,15,19,0.95)', borderColor: 'var(--border)', backdropFilter: 'blur(12px)' }}
       >
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 min-w-0">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
               <rect width="36" height="36" rx="9" fill="url(#logo-grad)"/>
               <defs>
                 <linearGradient id="logo-grad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
@@ -103,7 +103,7 @@ export function Navbar() {
               <line x1="18.5" y1="26" x2="26.5" y2="21.8" stroke="#f97316" strokeWidth="0.8" strokeOpacity="0.55"/>
               <line x1="18.5" y1="28.5" x2="26.5" y2="24.3" stroke="#f97316" strokeWidth="0.8" strokeOpacity="0.55"/>
             </svg>
-            <span className="text-xl font-black tracking-tight">
+            <span className="text-base sm:text-xl font-black tracking-tight truncate">
               3DPrinting<span style={{ color: 'var(--accent)' }}>BG</span>
             </span>
           </Link>
