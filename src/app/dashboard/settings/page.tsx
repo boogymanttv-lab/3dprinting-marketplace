@@ -5,9 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X } from 'lucide-react'
+import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink } from 'lucide-react'
 
-type Tab = 'profile' | 'shop' | 'company' | 'password'
+type Tab = 'profile' | 'shop' | 'company' | 'billing' | 'password'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -30,6 +30,11 @@ export default function SettingsPage() {
   const [bannerUploading, setBannerUploading] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
+  const [billing, setBilling] = useState<{
+    planName: string; priceMonthly: number; interval: 'monthly' | 'yearly' | null
+    expiresAt: string | null; hasStripeCustomer: boolean
+  } | null>(null)
+  const [portalLoading, setPortalLoading] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -53,7 +58,7 @@ export default function SettingsPage() {
 
       const { data: shopData } = await supabase
         .from('shops')
-        .select('*')
+        .select('*, plan:plans(name, price_monthly, price_yearly)')
         .eq('owner_id', user.id)
         .maybeSingle()
 
@@ -74,6 +79,14 @@ export default function SettingsPage() {
           eik: shopData.eik ?? '',
           vat_number: shopData.vat_number ?? '',
           company_address: shopData.company_address ?? '',
+        })
+        const planInfo = Array.isArray(shopData.plan) ? shopData.plan[0] : shopData.plan
+        setBilling({
+          planName: planInfo?.name ?? 'Free',
+          priceMonthly: planInfo?.price_monthly ?? 0,
+          interval: shopData.billing_interval ?? null,
+          expiresAt: shopData.plan_expires_at ?? null,
+          hasStripeCustomer: !!shopData.stripe_customer_id,
         })
       }
     }
@@ -187,6 +200,23 @@ export default function SettingsPage() {
     router.push('/')
   }
 
+  async function openBillingPortal() {
+    setPortalLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(data.error || 'Грешка при отваряне на управлението на плащания.')
+    } catch {
+      setError('Грешка при отваряне на управлението на плащания.')
+    }
+    setPortalLoading(false)
+  }
+
   const inputStyle = {
     background: 'var(--bg2)',
     border: '1px solid var(--border)',
@@ -197,6 +227,7 @@ export default function SettingsPage() {
     { key: 'profile', icon: <User size={16} />, label: 'Профил' },
     { key: 'shop', icon: <Store size={16} />, label: 'Магазин', show: hasShop },
     { key: 'company', icon: <Building2 size={16} />, label: 'Фирма', show: hasShop },
+    { key: 'billing', icon: <CreditCard size={16} />, label: 'Абонамент', show: hasShop },
     { key: 'password', icon: <Lock size={16} />, label: 'Парола' },
   ]
 
@@ -449,6 +480,53 @@ export default function SettingsPage() {
               style={{ background: 'var(--accent)', color: '#fff', border: 'none', opacity: loading ? 0.7 : 1 }}>
               <Save size={15} /> {loading ? 'Запазване...' : 'Запази промените'}
             </button>
+          </>
+        )}
+
+        {/* Billing */}
+        {tab === 'billing' && billing && (
+          <>
+            <h2 className="font-bold flex items-center gap-2"><CreditCard size={16} /> Абонамент</h2>
+
+            <div className="rounded-xl p-4" style={{ background: 'var(--bg2)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-lg font-black">{billing.planName}</p>
+                {billing.priceMonthly > 0 && (
+                  <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
+                    {billing.priceMonthly.toFixed(2)} €{billing.interval === 'yearly' ? '/год.' : '/мес.'}
+                  </p>
+                )}
+              </div>
+              {billing.priceMonthly === 0 ? (
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>Безплатен план</p>
+              ) : (
+                <>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                    Период на плащане: {billing.interval === 'yearly' ? 'Годишно' : 'Месечно'}
+                  </p>
+                  {billing.expiresAt && (
+                    <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                      Следващо подновяване: {new Date(billing.expiresAt).toLocaleDateString('bg-BG')}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/plans"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity"
+                style={{ background: 'var(--accent)', color: '#fff', textDecoration: 'none' }}>
+                Смени план
+              </Link>
+              {billing.hasStripeCustomer && (
+                <button onClick={openBillingPortal} disabled={portalLoading}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity"
+                  style={{ border: '1.5px solid var(--border)', color: 'var(--text)', background: 'transparent', opacity: portalLoading ? 0.7 : 1 }}>
+                  <ExternalLink size={15} /> {portalLoading ? 'Отваряне...' : 'Управление на плащания'}
+                </button>
+              )}
+            </div>
           </>
         )}
 

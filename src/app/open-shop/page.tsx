@@ -13,6 +13,7 @@ function OpenShopForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planId = searchParams.get('plan')
+  const interval = (searchParams.get('interval') === 'yearly' ? 'yearly' : 'monthly') as 'monthly' | 'yearly'
 
   if (!planId) {
     router.replace('/plans')
@@ -26,8 +27,8 @@ function OpenShopForm() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  // 'idle' | 'counting' | 'done'
-  const [successState, setSuccessState] = useState<'idle' | 'counting' | 'done'>('idle')
+  // 'idle' | 'counting' | 'done' | 'redirecting'
+  const [successState, setSuccessState] = useState<'idle' | 'counting' | 'done' | 'redirecting'>('idle')
   const [countdown, setCountdown] = useState(COUNTDOWN)
   const [shopSlug, setShopSlug] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -58,8 +59,9 @@ function OpenShopForm() {
     if (!user) { router.push('/login?redirectTo=/open-shop'); return }
 
     const slug = slugify(form.name) + '-' + Math.random().toString(36).slice(2, 6)
+    const isPaidPlan = planId !== 'free'
 
-    const { error: shopError } = await supabase.from('shops').insert({
+    const { data: newShop, error: shopError } = await supabase.from('shops').insert({
       owner_id: user.id,
       name: form.name,
       slug,
@@ -70,12 +72,39 @@ function OpenShopForm() {
       eik: form.eik || null,
       vat_number: form.vat_number || null,
       company_address: form.company_address || null,
-      plan_id: planId,
-    })
+      // Магазинът винаги стартира на Free — платеният план се активира
+      // едва след успешно плащане през Stripe (виж по-долу).
+      plan_id: isPaidPlan ? 'free' : planId,
+    }).select('id').single()
 
-    if (shopError) {
+    if (shopError || !newShop) {
       setError('Грешка при създаването. Може би вече имаш магазин.')
       setLoading(false)
+      return
+    }
+
+    // Платен план → пращаме към Stripe Checkout, за да завърши плащането
+    if (isPaidPlan) {
+      setSuccessState('redirecting')
+      try {
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shopId: newShop.id, planId, interval }),
+        })
+        const data = await res.json()
+        if (data.url) {
+          window.location.href = data.url
+          return
+        }
+        setError(data.error || 'Грешка при свързване със Stripe. Магазинът е създаден на безплатен план — можеш да надградиш по-късно от настройките.')
+        setSuccessState('idle')
+        setLoading(false)
+      } catch {
+        setError('Грешка при свързване със Stripe. Магазинът е създаден на безплатен план — можеш да надградиш по-късно от настройките.')
+        setSuccessState('idle')
+        setLoading(false)
+      }
       return
     }
 
@@ -99,6 +128,22 @@ function OpenShopForm() {
 
   const planLabel: Record<string, string> = {
     free: 'Free', starter: 'Starter', pro: 'Pro', business: 'Business', unlimited: 'Unlimited'
+  }
+
+  // ── Redirecting to Stripe ─────────────────────────────────────────
+  if (successState === 'redirecting') {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-24 text-center">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6 animate-pulse"
+          style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
+          💳
+        </div>
+        <h2 className="text-2xl font-black mb-2">Пренасочваме те към Stripe...</h2>
+        <p className="text-sm" style={{ color: 'var(--muted)' }}>
+          Магазинът е създаден. Остава само да завършиш плащането сигурно през Stripe.
+        </p>
+      </div>
+    )
   }
 
   // ── Success: counting ──────────────────────────────────────────────

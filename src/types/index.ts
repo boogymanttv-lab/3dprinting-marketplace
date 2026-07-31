@@ -17,12 +17,17 @@ export interface Plan {
   id: string
   name: string
   price_monthly: number
+  price_yearly: number | null
   max_listings: number | null
   description: string
   features: string[]
   stripe_price_id: string | null
+  stripe_price_id_monthly: string | null
+  stripe_price_id_yearly: string | null
   sort_order: number
 }
+
+export type BillingInterval = 'monthly' | 'yearly'
 
 // ── Shop ──────────────────────────────────────────
 export interface Shop {
@@ -42,6 +47,9 @@ export interface Shop {
   company_address: string | null
   plan_id: string
   plan_expires_at: string | null
+  billing_interval: BillingInterval | null
+  stripe_customer_id?: string | null
+  stripe_subscription_id?: string | null
   total_sales: number
   rating: number
   review_count: number
