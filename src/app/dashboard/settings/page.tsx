@@ -303,7 +303,7 @@ export default function SettingsPage() {
           <>
             <h2 className="font-bold flex items-center gap-2"><User size={16} /> Лични данни</h2>
             <Field label="Имейл" value={profile.email} onChange={() => {}} placeholder="Не може да се смени тук" />
-            <Field label="Пълно ime" value={profile.full_name} onChange={v => setProfile(p => ({ ...p, full_name: v }))} placeholder="Иван Иванов" />
+            <Field label="Пълно име" value={profile.full_name} onChange={v => setProfile(p => ({ ...p, full_name: v }))} placeholder="Иван Иванов" />
             <Field label="Телефон" value={profile.phone} onChange={v => setProfile(p => ({ ...p, phone: v }))} placeholder="+359..." type="tel" />
             <Field label="Град" value={profile.city} onChange={v => setProfile(p => ({ ...p, city: v }))} placeholder="София" />
             <button onClick={saveProfile} disabled={loading}
@@ -407,7 +407,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <Field label="Ime на магазина *" value={shop.name} onChange={v => setShop(s => ({ ...s, name: v }))} />
+            <Field label="Име на магазина *" value={shop.name} onChange={v => setShop(s => ({ ...s, name: v }))} />
             <TextArea label="Описание" value={shop.description} onChange={v => setShop(s => ({ ...s, description: v }))} placeholder="Разкажи на купувачите какво продаваш..." />
             <Field label="Град" value={shop.city} onChange={v => setShop(s => ({ ...s, city: v }))} placeholder="София" />
             <Field label="Телефон" value={shop.phone} onChange={v => setShop(s => ({ ...s, phone: v }))} placeholder="+359..." type="tel" />

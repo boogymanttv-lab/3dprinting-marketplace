@@ -65,7 +65,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-2xl font-black">Създай акаунт</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
-            Присъедини се към Print3D
+            Присъедини се към 3DPrintingBG
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function RegisterPage() {
           )}
 
           {[
-            { label: 'Пълно ime', field: 'full_name', type: 'text', placeholder: 'Иван Иванов' },
+            { label: 'Пълно име', field: 'full_name', type: 'text', placeholder: 'Иван Иванов' },
             { label: 'Имейл', field: 'email', type: 'email', placeholder: 'you@example.com' },
             { label: 'Парола', field: 'password', type: 'password', placeholder: 'Мин. 8 символа' },
             { label: 'Потвърди паролата', field: 'confirm', type: 'password', placeholder: '••••••••' },

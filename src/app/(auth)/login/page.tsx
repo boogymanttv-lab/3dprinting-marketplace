@@ -55,7 +55,7 @@ function LoginForm() {
             style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
             🖨️
           </div>
-          <h1 className="text-2xl font-black">Вход в Print3D</h1>
+          <h1 className="text-2xl font-black">Вход в 3DPrintingBG</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
             Влез в акаунта си
           </p>

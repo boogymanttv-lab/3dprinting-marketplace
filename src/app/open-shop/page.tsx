@@ -49,7 +49,7 @@ function OpenShopForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim()) { setError('Въведи ime на магазина.'); return }
+    if (!form.name.trim()) { setError('Въведи име на магазина.'); return }
 
     setLoading(true)
     setError('')
@@ -310,7 +310,7 @@ function OpenShopForm() {
             <h2 className="font-bold text-base mb-1">🏪 Основна информация</h2>
 
             <div>
-              <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Ime на магазина *</label>
+              <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Име на магазина *</label>
               <input className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none" style={inputStyle}
                 value={form.name} onChange={update('name')} placeholder="напр. PrintShop BG" required
                 onFocus={e => e.target.style.borderColor = 'var(--accent)'}
@@ -354,7 +354,7 @@ function OpenShopForm() {
                 style={{ border: '1px solid var(--border)', color: 'var(--muted)', textDecoration: 'none' }}>
                 ← Смени план
               </Link>
-              <button type="button" onClick={() => { if (!form.name.trim()) { setError('Въведи ime.'); return }; setError(''); setStep(2) }}
+              <button type="button" onClick={() => { if (!form.name.trim()) { setError('Въведи име.'); return }; setError(''); setStep(2) }}
                 className="flex-[2] py-2.5 rounded-xl text-sm font-bold"
                 style={{ background: 'var(--accent)', color: '#fff', border: 'none' }}>
                 Продължи →
