@@ -1,0 +1,51 @@
+import { createAdminClient } from '@/lib/supabase/admin'
+import { Users, UserCheck, UserX, Package, Store, Flag, ShoppingBag } from 'lucide-react'
+
+export default async function AdminDashboardPage() {
+  const admin = createAdminClient()
+
+  const [
+    { data: usersPage },
+    { count: listingsCount },
+    { count: activeShopsCount },
+    { count: totalShopsCount },
+    { count: flaggedCount },
+    { count: ordersCount },
+  ] = await Promise.all([
+    admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    admin.from('listings').select('*', { count: 'exact', head: true }),
+    admin.from('shops').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    admin.from('shops').select('*', { count: 'exact', head: true }),
+    admin.from('listings').select('*', { count: 'exact', head: true }).eq('moderation_status', 'flagged'),
+    admin.from('orders').select('*', { count: 'exact', head: true }),
+  ])
+
+  const users = usersPage?.users ?? []
+  const totalUsers = users.length
+  const verifiedUsers = users.filter(u => !!u.email_confirmed_at).length
+  const unverifiedUsers = totalUsers - verifiedUsers
+
+  const stats = [
+    { label: 'Общо потребители', value: totalUsers, icon: <Users size={18} />, color: '#818cf8' },
+    { label: 'Потвърдени имейли', value: verifiedUsers, icon: <UserCheck size={18} />, color: '#22c55e' },
+    { label: 'Непотвърдени имейли', value: unverifiedUsers, icon: <UserX size={18} />, color: '#f87171' },
+    { label: 'Общо обяви', value: listingsCount ?? 0, icon: <Package size={18} />, color: '#f97316' },
+    { label: 'Активни магазини', value: `${activeShopsCount ?? 0} / ${totalShopsCount ?? 0}`, icon: <Store size={18} />, color: '#60a5fa' },
+    { label: 'Обяви за преглед', value: flaggedCount ?? 0, icon: <Flag size={18} />, color: '#eab308' },
+    { label: 'Общо поръчки', value: ordersCount ?? 0, icon: <ShoppingBag size={18} />, color: '#a78bfa' },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {stats.map(s => (
+        <div key={s.label} className="rounded-2xl border p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{ background: `${s.color}22`, color: s.color }}>
+            {s.icon}
+          </div>
+          <p className="text-2xl font-black">{s.value}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{s.label}</p>
+        </div>
+      ))}
+    </div>
+  )
+}

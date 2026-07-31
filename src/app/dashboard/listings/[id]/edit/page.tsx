@@ -39,6 +39,8 @@ export default function EditListingPage() {
     tags: '',
     is_active: true,
   })
+  const [moderationNote, setModerationNote] = useState<string | null>(null)
+  const [isFlagged, setIsFlagged] = useState(false)
 
   const totalImages = existingImages.length + newFiles.length
 
@@ -81,6 +83,8 @@ export default function EditListingPage() {
         is_active: listing.is_active ?? true,
       })
       setExistingImages(listing.images ?? [])
+      setModerationNote(listing.moderation_note ?? null)
+      setIsFlagged(listing.moderation_status === 'flagged')
 
       // Set parent category
       if (listing.category?.parent_id) {
@@ -199,6 +203,8 @@ export default function EditListingPage() {
         tags,
         images: allImages,
         is_active: form.is_active,
+        // Редакция от продавача след флаг = проблемът е адресиран
+        ...(isFlagged ? { moderation_status: 'active', moderation_note: null, flagged_by: null, flagged_at: null } : {}),
       })
       .eq('id', id)
       .eq('shop_id', shop.id)
@@ -239,6 +245,13 @@ export default function EditListingPage() {
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Промени информацията за продукта</p>
         </div>
       </div>
+
+      {isFlagged && moderationNote && (
+        <div className="rounded-xl p-4 mb-5 text-sm" style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)', color: '#eab308' }}>
+          ⚠️ Тази обява беше свалена от екипа ни: <strong>{moderationNote}</strong>
+          <br />Направи нужните промени и запази — обявата ще се маркира отново като редовна.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Images */}

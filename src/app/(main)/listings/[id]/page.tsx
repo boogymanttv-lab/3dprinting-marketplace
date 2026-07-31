@@ -16,11 +16,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .from('listings')
     .select(`
       *,
-      shop:shops(*, owner:profiles(full_name, avatar_url)),
+      shop:shops!inner(*, owner:profiles(full_name, avatar_url)),
       category:categories(id, name, slug, parent:categories(name, slug))
     `)
     .eq('id', id)
     .eq('is_active', true)
+    .eq('shop.is_active', true)
     .maybeSingle()
 
   if (!listing) notFound()

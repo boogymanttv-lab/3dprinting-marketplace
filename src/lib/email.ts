@@ -111,6 +111,29 @@ function orderStatusUpdate(data: {
   }
 }
 
+function listingFlagged(data: { ownerName: string; listingTitle: string; note: string }) {
+  return {
+    subject: `⚠️ Обявата ти се нуждае от редакция — ${data.listingTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0f0f13; color: #f1f0f7; border-radius: 16px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="font-size: 48px;">⚠️</div>
+          <h2 style="font-size: 20px; font-weight: 900; margin: 8px 0;">Обявата ти е свалена от екипа ни</h2>
+        </div>
+        <p style="color: #8884a0; margin-bottom: 16px;">
+          Здравей <strong>${data.ownerName}</strong>! Обявата ти <strong>${data.listingTitle}</strong> беше временно скрита от сайта и се нуждае от редакция.
+        </p>
+        <div style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+          <p style="font-size: 12px; color: #eab308; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px;">Причина</p>
+          <p style="margin: 0;">${data.note}</p>
+        </div>
+        <p style="color: #8884a0; margin-bottom: 24px;">След като направиш нужните промени, можеш сам да активираш обявата отново от твоя Dashboard.</p>
+        <a href="${APP_URL}/dashboard/listings" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Редактирай обявата</a>
+      </div>
+    `,
+  }
+}
+
 // ─── Send functions ───────────────────────────────────
 
 export async function sendOrderConfirmation(
@@ -153,4 +176,15 @@ export async function sendStatusUpdate(
 
   const tpl = orderStatusUpdate(data)
   await resend.emails.send({ from: FROM, to: buyerEmail, ...tpl })
+}
+
+export async function sendListingFlagged(
+  ownerEmail: string,
+  data: { ownerName: string; listingTitle: string; note: string }
+) {
+  const resend = await getResend()
+  if (!resend) return
+
+  const tpl = listingFlagged(data)
+  await resend.emails.send({ from: FROM, to: ownerEmail, ...tpl })
 }

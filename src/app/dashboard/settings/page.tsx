@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink, PauseCircle, Trash2, AlertTriangle } from 'lucide-react'
 
 type Tab = 'profile' | 'shop' | 'company' | 'billing' | 'password'
 
@@ -35,6 +35,10 @@ export default function SettingsPage() {
     expiresAt: string | null; hasStripeCustomer: boolean
   } | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [accountModal, setAccountModal] = useState<'deactivate' | 'delete' | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [accountActionLoading, setAccountActionLoading] = useState(false)
+  const [accountActionError, setAccountActionError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -198,6 +202,43 @@ export default function SettingsPage() {
   async function handleSignOut() {
     await supabase.auth.signOut()
     router.push('/')
+  }
+
+  async function handleDeactivate() {
+    setAccountActionLoading(true)
+    setAccountActionError('')
+    try {
+      const res = await fetch('/api/account/deactivate', { method: 'POST' })
+      if (!res.ok) throw new Error()
+      await supabase.auth.signOut()
+      router.push('/?deactivated=1')
+    } catch {
+      setAccountActionError('Грешка при деактивиране. Опитай отново.')
+      setAccountActionLoading(false)
+    }
+  }
+
+  async function handleDeleteForever() {
+    if (deleteConfirmText.trim().toUpperCase() !== 'ИЗТРИЙ') {
+      setAccountActionError('Напиши ИЗТРИЙ с главни букви, за да потвърдиш.')
+      return
+    }
+    setAccountActionLoading(true)
+    setAccountActionError('')
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        setAccountActionError(data.error || 'Грешка при изтриване на акаунта.')
+        setAccountActionLoading(false)
+        return
+      }
+      await supabase.auth.signOut()
+      router.push('/?account_deleted=1')
+    } catch {
+      setAccountActionError('Грешка при изтриване на акаунта.')
+      setAccountActionLoading(false)
+    }
   }
 
   async function openBillingPortal() {
@@ -562,14 +603,102 @@ export default function SettingsPage() {
       {/* Danger zone */}
       <div className="rounded-2xl border mt-5 p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
         <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--muted)' }}>Акаунт</h3>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
-          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
-        >
-          <LogOut size={15} /> Излез от акаунта
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: 'var(--bg3)', color: 'var(--text)', border: '1px solid var(--border)', cursor: 'pointer' }}
+          >
+            <LogOut size={15} /> Излез от акаунта
+          </button>
+          <button
+            onClick={() => { setAccountModal('deactivate'); setAccountActionError('') }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: 'rgba(234,179,8,0.1)', color: '#eab308', border: '1px solid rgba(234,179,8,0.2)', cursor: 'pointer' }}
+          >
+            <PauseCircle size={15} /> Временно затвори акаунта
+          </button>
+          <button
+            onClick={() => { setAccountModal('delete'); setAccountActionError(''); setDeleteConfirmText('') }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
+          >
+            <Trash2 size={15} /> Изтрий акаунта завинаги
+          </button>
+        </div>
       </div>
+
+      {/* Deactivate confirm modal */}
+      {accountModal === 'deactivate' && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="w-full max-w-md rounded-2xl border p-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center gap-2 mb-3" style={{ color: '#eab308' }}>
+              <PauseCircle size={20} />
+              <h3 className="font-bold text-lg">Временно затваряне на акаунта</h3>
+            </div>
+            <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
+              Профилът, магазинът и всички твои обяви ще изчезнат от сайта незабавно.
+              Данните ти се запазват — просто влез отново по всяко време, за да върнеш всичко автоматично.
+            </p>
+            {accountActionError && (
+              <p className="text-xs mb-3" style={{ color: '#f87171' }}>{accountActionError}</p>
+            )}
+            <div className="flex gap-3">
+              <button onClick={() => setAccountModal(null)} disabled={accountActionLoading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ border: '1px solid var(--border)', color: 'var(--muted)', background: 'transparent', cursor: 'pointer' }}>
+                Отказ
+              </button>
+              <button onClick={handleDeactivate} disabled={accountActionLoading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#eab308', color: '#000', border: 'none', cursor: 'pointer', opacity: accountActionLoading ? 0.7 : 1 }}>
+                {accountActionLoading ? 'Затваряне...' : 'Затвори временно'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent delete confirm modal */}
+      {accountModal === 'delete' && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="w-full max-w-md rounded-2xl border p-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center gap-2 mb-3" style={{ color: '#f87171' }}>
+              <AlertTriangle size={20} />
+              <h3 className="font-bold text-lg">Изтриване на акаунта завинаги</h3>
+            </div>
+            <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
+              Това е <strong style={{ color: '#f87171' }}>необратимо</strong>. Ще бъдат изтрити профилът,
+              магазинът, всички обяви, съобщения и запазени карти. Активният ти абонамент ще бъде отменен автоматично.
+            </p>
+            <label className="text-xs block mb-1.5" style={{ color: 'var(--muted)' }}>
+              Напиши <strong>ИЗТРИЙ</strong>, за да потвърдиш:
+            </label>
+            <input
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none mb-3"
+              style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              placeholder="ИЗТРИЙ"
+            />
+            {accountActionError && (
+              <p className="text-xs mb-3" style={{ color: '#f87171' }}>{accountActionError}</p>
+            )}
+            <div className="flex gap-3">
+              <button onClick={() => setAccountModal(null)} disabled={accountActionLoading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ border: '1px solid var(--border)', color: 'var(--muted)', background: 'transparent', cursor: 'pointer' }}>
+                Отказ
+              </button>
+              <button onClick={handleDeleteForever} disabled={accountActionLoading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                style={{ background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', opacity: accountActionLoading ? 0.7 : 1 }}>
+                {accountActionLoading ? 'Изтриване...' : 'Изтрий завинаги'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Legal */}
       <div className="rounded-2xl border mt-5 p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>

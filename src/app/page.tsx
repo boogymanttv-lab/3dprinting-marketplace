@@ -8,7 +8,7 @@ import type { Listing, Shop, Category } from '@/types'
 
 export const revalidate = 60
 
-interface SearchParams { category?: string; sub?: string; q?: string; tab?: string }
+interface SearchParams { category?: string; sub?: string; q?: string; tab?: string; deactivated?: string; account_deleted?: string }
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
@@ -27,8 +27,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   // Build query for listings
   let listingsQuery = supabase
     .from('listings')
-    .select('*, shop:shops(id, name, city, rating), category:categories(id, name, slug)')
+    .select('*, shop:shops!inner(id, name, city, rating, is_active), category:categories(id, name, slug)')
     .eq('is_active', true)
+    .eq('shop.is_active', true)
     .order('created_at', { ascending: false })
     .limit(24)
 
@@ -60,6 +61,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   return (
     <div>
+      {(params.deactivated === '1' || params.account_deleted === '1') && (
+        <div className="px-4 pt-4 max-w-3xl mx-auto">
+          <div className="rounded-xl px-5 py-3.5 text-sm text-center font-semibold"
+            style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}>
+            {params.account_deleted === '1'
+              ? '✅ Акаунтът ти беше изтрит завинаги. Съжаляваме, че си тръгваш!'
+              : '⏸️ Акаунтът ти е временно затворен. Влез отново по всяко време, за да върнеш всичко.'}
+          </div>
+        </div>
+      )}
       {/* Hero */}
       <section
         className="border-b py-14 px-4 text-center"

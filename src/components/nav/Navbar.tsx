@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import {
   Home, Store, MessageCircle, User as UserIcon,
-  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart
+  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart, Shield
 } from 'lucide-react'
 
 export function Navbar() {
@@ -15,6 +15,7 @@ export function Navbar() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [hasShop, setHasShop] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -29,6 +30,13 @@ export function Navbar() {
           .eq('owner_id', data.user.id)
           .maybeSingle()
           .then(({ data: shop }) => setHasShop(!!shop))
+
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .maybeSingle()
+          .then(({ data: profile }) => setIsAdmin(!!profile?.role && profile.role !== 'user'))
       }
     })
 
@@ -202,6 +210,18 @@ export function Navbar() {
                           >
                             <Store size={15} />
                             Отвори магазин
+                          </Link>
+                        )}
+
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="dropdown-item"
+                            style={{ color: '#f97316' }}
+                          >
+                            <Shield size={15} />
+                            Админ панел
                           </Link>
                         )}
 

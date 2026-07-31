@@ -1,6 +1,8 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
 
 // ── Auth ──────────────────────────────────────────
+export type UserRole = 'user' | 'moderator' | 'operator' | 'super_admin'
+
 export interface Profile {
   id: string
   email: string
@@ -8,8 +10,18 @@ export interface Profile {
   avatar_url: string | null
   phone: string | null
   city: string | null
+  role: UserRole
+  is_deactivated: boolean
+  deactivated_at: string | null
   created_at: string
   updated_at: string
+}
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  user: 'Потребител',
+  moderator: 'Модератор',
+  operator: 'Оператор',
+  super_admin: 'Главен админ',
 }
 
 // ── Plans ─────────────────────────────────────────
@@ -93,6 +105,10 @@ export interface Listing {
   is_active: boolean
   is_featured: boolean
   view_count: number
+  moderation_status: 'active' | 'flagged'
+  moderation_note: string | null
+  flagged_by: string | null
+  flagged_at: string | null
   created_at: string
   updated_at: string
   // Joins

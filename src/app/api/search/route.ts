@@ -11,8 +11,9 @@ export async function GET(request: Request) {
 
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, title, price, currency, images, shop:shops(name)')
+    .select('id, title, price, currency, images, shop:shops!inner(name, is_active)')
     .eq('is_active', true)
+    .eq('shop.is_active', true)
     .ilike('title', `%${q}%`)
     .order('created_at', { ascending: false })
     .limit(6)

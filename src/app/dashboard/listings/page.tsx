@@ -28,7 +28,8 @@ export default async function ListingsPage() {
     .eq('shop_id', shop.id)
     .order('created_at', { ascending: false })
 
-  const maxListings = (shop.plan as any)?.max_listings
+  const planData = Array.isArray(shop.plan) ? shop.plan[0] : shop.plan
+  const maxListings = (planData as { max_listings: number | null } | null)?.max_listings
   const activeCount = listings?.filter(l => l.is_active).length ?? 0
 
   return (
@@ -105,14 +106,24 @@ export default async function ListingsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className="font-semibold text-sm truncate">{listing.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0`}
-                    style={{
-                      background: listing.is_active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                      color: listing.is_active ? '#22c55e' : '#f87171',
-                    }}>
-                    {listing.is_active ? 'Активна' : 'Неактивна'}
-                  </span>
+                  {listing.moderation_status === 'flagged' ? (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+                      style={{ background: 'rgba(234,179,8,0.15)', color: '#eab308' }}>
+                      ⚠️ За редакция
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+                      style={{
+                        background: listing.is_active ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                        color: listing.is_active ? '#22c55e' : '#f87171',
+                      }}>
+                      {listing.is_active ? 'Активна' : 'Неактивна'}
+                    </span>
+                  )}
                 </div>
+                {listing.moderation_status === 'flagged' && listing.moderation_note && (
+                  <p className="text-xs mb-1" style={{ color: '#eab308' }}>{listing.moderation_note}</p>
+                )}
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
                   {listing.category?.name ?? '—'} · {formatRelativeTime(listing.created_at)}
                 </p>

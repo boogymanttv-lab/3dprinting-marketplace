@@ -42,6 +42,9 @@ function LoginForm() {
       return
     }
 
+    // Ако акаунтът е бил временно затворен, влизането го връща автоматично
+    try { await fetch('/api/account/reactivate', { method: 'POST' }) } catch {}
+
     router.push(redirectTo)
     router.refresh()
   }
