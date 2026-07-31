@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { slugify } from '@/lib/utils'
 import type Stripe from 'stripe'
 
 export async function POST(request: Request) {
@@ -25,54 +26,89 @@ export async function POST(request: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        const shopId = session.metadata?.shop_id
-        const planId = session.metadata?.plan_id
-        const interval = session.metadata?.interval
+        const meta = session.metadata ?? {}
+        const planId = meta.plan_id
+        const interval = meta.interval
+        if (!planId) break
 
-        if (shopId && planId) {
-          const subscriptionId =
-            typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null
+        const subscriptionId =
+          typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null
+        const customerId =
+          typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null
 
-          let periodEnd: string | null = null
-          if (subscriptionId) {
-            const sub = await stripe.subscriptions.retrieve(subscriptionId)
-            const currentPeriodEnd = (sub as unknown as { current_period_end: number }).current_period_end
-            if (currentPeriodEnd) periodEnd = new Date(currentPeriodEnd * 1000).toISOString()
-          }
+        let periodEnd: string | null = null
+        if (subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId)
+          const currentPeriodEnd = (sub as unknown as { current_period_end: number }).current_period_end
+          if (currentPeriodEnd) periodEnd = new Date(currentPeriodEnd * 1000).toISOString()
+        }
 
+        if (meta.mode === 'create_shop') {
+          // New shop — create it now that payment succeeded.
+          const ownerId = meta.owner_id
+          if (!ownerId) break
+
+          // Idempotency: webhook can be retried by Stripe.
+          const { data: alreadyExists } = await admin
+            .from('shops')
+            .select('id')
+            .eq('owner_id', ownerId)
+            .maybeSingle()
+          if (alreadyExists) break
+
+          let slug = meta.slug || slugify(meta.name || 'shop') + '-' + Math.random().toString(36).slice(2, 6)
+          // Guard against slug collisions
+          const { data: slugTaken } = await admin.from('shops').select('id').eq('slug', slug).maybeSingle()
+          if (slugTaken) slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`
+
+          await admin.from('shops').insert({
+            owner_id: ownerId,
+            name: meta.name || 'Моят магазин',
+            slug,
+            description: meta.description || null,
+            city: meta.city || null,
+            phone: meta.phone || null,
+            company_name: meta.company_name || null,
+            eik: meta.eik || null,
+            vat_number: meta.vat_number || null,
+            company_address: meta.company_address || null,
+            plan_id: planId,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            billing_interval: interval ?? null,
+            plan_expires_at: periodEnd,
+          })
+        } else if (meta.shop_id) {
+          // Upgrade of an existing shop
           await admin.from('shops').update({
             plan_id: planId,
             stripe_subscription_id: subscriptionId,
             billing_interval: interval ?? null,
             plan_expires_at: periodEnd,
-          }).eq('id', shopId)
+          }).eq('id', meta.shop_id)
         }
         break
       }
 
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription
-        const shopId = sub.metadata?.shop_id
         const currentPeriodEnd = (sub as unknown as { current_period_end: number }).current_period_end
-        if (shopId && currentPeriodEnd) {
+        if (currentPeriodEnd) {
           await admin.from('shops').update({
             plan_expires_at: new Date(currentPeriodEnd * 1000).toISOString(),
-          }).eq('id', shopId)
+          }).eq('stripe_subscription_id', sub.id)
         }
         break
       }
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
-        const shopId = sub.metadata?.shop_id
-        if (shopId) {
-          await admin.from('shops').update({
-            plan_id: 'free',
-            stripe_subscription_id: null,
-            billing_interval: null,
-            plan_expires_at: null,
-          }).eq('id', shopId)
-        }
+        await admin.from('shops').update({
+          plan_id: 'free',
+          stripe_subscription_id: null,
+          billing_interval: null,
+          plan_expires_at: null,
+        }).eq('stripe_subscription_id', sub.id)
         break
       }
 

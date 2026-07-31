@@ -61,7 +61,49 @@ function OpenShopForm() {
     const slug = slugify(form.name) + '-' + Math.random().toString(36).slice(2, 6)
     const isPaidPlan = planId !== 'free'
 
-    const { data: newShop, error: shopError } = await supabase.from('shops').insert({
+    // Платен план → изобщо не създаваме магазина още. Пращаме данните
+    // към Stripe Checkout и магазинът се създава едва след успешно плащане
+    // (webhook), за да няма никога "магазин на Free" зависнал след неуспешно плащане.
+    if (isPaidPlan) {
+      setSuccessState('redirecting')
+      try {
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planId,
+            interval,
+            shopDraft: {
+              name: form.name,
+              slug,
+              description: form.description,
+              city: form.city,
+              phone: form.phone,
+              company_name: form.company_name,
+              eik: form.eik,
+              vat_number: form.vat_number,
+              company_address: form.company_address,
+            },
+          }),
+        })
+        const data = await res.json()
+        if (data.url) {
+          window.location.href = data.url
+          return
+        }
+        setError(data.error || 'Грешка при свързване със Stripe.')
+        setSuccessState('idle')
+        setLoading(false)
+      } catch {
+        setError('Грешка при свързване със Stripe.')
+        setSuccessState('idle')
+        setLoading(false)
+      }
+      return
+    }
+
+    // Free план — създаваме магазина веднага, без Stripe
+    const { error: shopError } = await supabase.from('shops').insert({
       owner_id: user.id,
       name: form.name,
       slug,
@@ -72,39 +114,12 @@ function OpenShopForm() {
       eik: form.eik || null,
       vat_number: form.vat_number || null,
       company_address: form.company_address || null,
-      // Магазинът винаги стартира на Free — платеният план се активира
-      // едва след успешно плащане през Stripe (виж по-долу).
-      plan_id: isPaidPlan ? 'free' : planId,
-    }).select('id').single()
+      plan_id: planId,
+    })
 
-    if (shopError || !newShop) {
+    if (shopError) {
       setError('Грешка при създаването. Може би вече имаш магазин.')
       setLoading(false)
-      return
-    }
-
-    // Платен план → пращаме към Stripe Checkout, за да завърши плащането
-    if (isPaidPlan) {
-      setSuccessState('redirecting')
-      try {
-        const res = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shopId: newShop.id, planId, interval }),
-        })
-        const data = await res.json()
-        if (data.url) {
-          window.location.href = data.url
-          return
-        }
-        setError(data.error || 'Грешка при свързване със Stripe. Магазинът е създаден на безплатен план — можеш да надградиш по-късно от настройките.')
-        setSuccessState('idle')
-        setLoading(false)
-      } catch {
-        setError('Грешка при свързване със Stripe. Магазинът е създаден на безплатен план — можеш да надградиш по-късно от настройките.')
-        setSuccessState('idle')
-        setLoading(false)
-      }
       return
     }
 
@@ -140,7 +155,7 @@ function OpenShopForm() {
         </div>
         <h2 className="text-2xl font-black mb-2">Пренасочваме те към Stripe...</h2>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Магазинът е създаден. Остава само да завършиш плащането сигурно през Stripe.
+          Магазинът ще се създаде автоматично веднага след успешно плащане.
         </p>
       </div>
     )
@@ -321,7 +336,7 @@ function OpenShopForm() {
             <div>
               <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Описание</label>
               <textarea className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none resize-none" style={inputStyle}
-                value={form.description} onChange={update('description')}
+                value={form.description} onChange={update('description')} maxLength={450}
                 placeholder="Разкажи на купувачите какво продаваш..." rows={3}
                 onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'}
