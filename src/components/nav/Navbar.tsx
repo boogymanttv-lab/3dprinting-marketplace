@@ -146,7 +146,7 @@ export function Navbar() {
               <>
                 {/* New listing button — only if has shop */}
                 {hasShop && (
-                  <Link href="/dashboard/listings/new" className="btn-primary btn-sm hidden md:flex items-center gap-1.5">
+                  <Link href="/dashboard/listings/new" className="btn-primary btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                     <Plus size={15} />
                     Нова обява
                   </Link>
@@ -154,7 +154,7 @@ export function Navbar() {
 
                 {/* Open shop button — only if no shop */}
                 {!hasShop && (
-                  <Link href="/plans" className="btn-accent btn-sm hidden md:flex items-center gap-1.5">
+                  <Link href="/plans" className="btn-accent btn-sm flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                     🏪 Отвори магазин
                   </Link>
                 )}

@@ -17,6 +17,15 @@
 
 * { box-sizing: border-box; }
 
+html {
+  /* Спира iOS Safari от автоматично уголемяване на текста според
+     "Larger Text" настройката на устройството — иначе бутони като
+     "Нова обява" се пренасят на 2 реда и изглеждат огромни на някои
+     телефони, докато на други (с нормален Text Size) са си нормални. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
