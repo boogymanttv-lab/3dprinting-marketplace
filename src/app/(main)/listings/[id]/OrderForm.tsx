@@ -28,9 +28,12 @@ const DELIVERY_OPTIONS: { key: DeliveryType; label: string }[] = [
 ]
 
 // Which payment methods are allowed per delivery type
+// Плащането с карта за поръчки (не за абонаменти — тези вече работят) е
+// планирано за по-нататък (Stripe Connect за разпределяне към продавачите).
+// Засега е закоментирано — само го разкоментирай, когато е готово.
 const ALLOWED_PAYMENTS: Record<DeliveryType, { key: PaymentMethod; label: string }[]> = {
-  office:    [{ key: 'card', label: '💳 С карта' }, { key: 'cod', label: '💵 Наложен платеж' }],
-  address:   [{ key: 'card', label: '💳 С карта' }, { key: 'cod', label: '💵 Наложен платеж' }],
+  office:    [/* { key: 'card', label: '💳 С карта' }, */ { key: 'cod', label: '💵 Наложен платеж' }],
+  address:   [/* { key: 'card', label: '💳 С карта' }, */ { key: 'cod', label: '💵 Наложен платеж' }],
   in_person: [{ key: 'in_person', label: '🤝 Лично' }],
 }
 
