@@ -203,7 +203,7 @@ export function Navbar() {
                             className="dropdown-item"
                           >
                             <LayoutDashboard size={15} />
-                            Dashboard
+                            Моят магазин
                           </Link>
                         )}
 
