@@ -8,6 +8,50 @@ import { ReviewsList } from './ReviewsList'
 import type { Listing } from '@/types'
 import { MapPin, Eye, Star } from 'lucide-react'
 import { ImageGallery, ShareButton, PhoneReveal } from './ListingActions'
+import type { Metadata } from 'next'
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('title, description, price, currency, images, city, shop:shops!inner(name, is_active)')
+    .eq('id', id)
+    .eq('is_active', true)
+    .eq('shop.is_active', true)
+    .maybeSingle()
+
+  if (!listing) return { title: 'Обявата не е намерена' }
+
+  const shop = Array.isArray(listing.shop) ? listing.shop[0] : listing.shop
+  const priceLabel = formatPrice(listing.price, listing.currency)
+  const title = `${listing.title} — ${priceLabel}`
+  const description = listing.description?.slice(0, 155)
+    ?? `${listing.title} — ${priceLabel}${listing.city ? ` в ${listing.city}` : ''}. Купи от ${shop?.name ?? 'магазин'} в 3DPrintingBG.`
+  const image = listing.images?.[0]
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/listings/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/listings/${id}`,
+      type: 'website',
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  }
+}
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -39,10 +83,39 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .limit(10)
 
   const l = listing as Listing & { shop: NonNullable<Listing['shop']> & { phone?: string } }
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/listings/${id}`
+  const shareUrl = `${SITE_URL}/listings/${id}`
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: l.title,
+    description: l.description ?? undefined,
+    image: l.images && l.images.length > 0 ? l.images : undefined,
+    sku: l.id,
+    offers: {
+      '@type': 'Offer',
+      url: shareUrl,
+      priceCurrency: l.currency,
+      price: l.price,
+      availability: l.quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: l.condition === 'new' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
+      seller: { '@type': 'Organization', name: l.shop.name },
+    },
+    ...(l.shop.review_count > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: l.shop.rating,
+        reviewCount: l.shop.review_count,
+      },
+    } : {}),
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: 'var(--muted)' }}>
         <Link href="/" className="hover:text-white transition-colors">Начало</Link>

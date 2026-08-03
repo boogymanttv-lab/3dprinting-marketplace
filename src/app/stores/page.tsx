@@ -2,8 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, Search } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'Онлайн магазини',
+  description: 'Разгледай всички магазини за 3D принтиране, филамент и принтери в 3DPrintingBG.',
+  alternates: { canonical: '/stores' },
+}
 
 interface SearchParams { q?: string; city?: string }
 

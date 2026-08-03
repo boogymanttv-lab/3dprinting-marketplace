@@ -7,6 +7,47 @@ import type { Listing } from '@/types'
 import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, ExternalLink } from 'lucide-react'
 import { ShareButton, PhoneReveal } from './StoreActions'
+import type { Metadata } from 'next'
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = await createClient()
+
+  const { data: shop } = await supabase
+    .from('shops')
+    .select('name, description, city, logo_url, banner_url')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!shop) return { title: 'Магазинът не е намерен' }
+
+  const title = shop.name
+  const description = shop.description?.slice(0, 155)
+    ?? `${shop.name}${shop.city ? ` — ${shop.city}` : ''}. Разгледай обявите на магазина в 3DPrintingBG.`
+  const image = shop.banner_url ?? shop.logo_url
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/stores/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/stores/${slug}`,
+      type: 'website',
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  }
+}
 
 export default async function StorePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -35,10 +76,32 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     .order('created_at', { ascending: false })
     .limit(6)
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'}/stores/${slug}`
+  const shareUrl = `${SITE_URL}/stores/${slug}`
+
+  const storeJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Store',
+    name: shop.name,
+    description: shop.description ?? undefined,
+    url: shareUrl,
+    image: shop.logo_url ?? shop.banner_url ?? undefined,
+    telephone: shop.phone ?? undefined,
+    address: shop.city ? { '@type': 'PostalAddress', addressLocality: shop.city, addressCountry: 'BG' } : undefined,
+    ...(shop.review_count > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: shop.rating,
+        reviewCount: shop.review_count,
+      },
+    } : {}),
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
+      />
       {/* Shop Header */}
       <div
         className="rounded-2xl border overflow-hidden mb-8"

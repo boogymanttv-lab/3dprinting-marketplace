@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { PlansGrid } from '@/components/plans/PlansGrid'
 import type { Plan } from '@/types'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Планове за магазин',
+  description: 'Отвори онлайн магазин за 3D принтирани продукти в 3DPrintingBG. Избери план — Free, Starter, Pro, Business или Unlimited.',
+  alternates: { canonical: '/plans' },
+}
 
 export default async function PlansPage({
   searchParams,

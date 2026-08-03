@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ListingCard } from '@/components/listings/ListingCard'
 import type { Listing } from '@/types'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function FavoritesPage() {
   const supabase = await createClient()

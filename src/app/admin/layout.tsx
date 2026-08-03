@@ -3,8 +3,10 @@ import Link from 'next/link'
 import { getCurrentUserAndRole, hasMinRole } from '@/lib/admin-auth'
 import { ROLE_LABELS } from '@/types'
 import { LayoutDashboard, Users, Package, Store } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, role } = await getCurrentUserAndRole()

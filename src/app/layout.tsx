@@ -3,23 +3,38 @@ import './globals.css'
 import { Navbar } from '@/components/nav/Navbar'
 import { CookieConsent } from '@/components/CookieConsent'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
+
 export const metadata: Metadata = {
-  title: '3DPrintingBG — Маркетплейс за 3D принтиране',
+  title: {
+    default: '3DPrintingBG — Маркетплейс за 3D принтиране',
+    template: '%s | 3DPrintingBG',
+  },
   description: 'Купувай и продавай филамент, принтери и 3D принтирани продукти в България',
   keywords: ['3D принтиране', 'филамент', 'PLA', 'PETG', 'marketplace', 'обяви', 'България'],
-  metadataBase: new URL('https://3dprintingbg.com'),
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   openGraph: {
     title: '3DPrintingBG — Маркетплейс за 3D принтиране',
     description: 'Купувай и продавай филамент, принтери и 3D принтирани продукти в България',
-    url: 'https://3dprintingbg.com',
+    url: SITE_URL,
     siteName: '3DPrintingBG',
     locale: 'bg_BG',
     type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: '3DPrintingBG' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: '3DPrintingBG',
     description: 'Маркетплейс за 3D принтиране в България',
+    images: ['/og-image.png'],
   },
 }
 
