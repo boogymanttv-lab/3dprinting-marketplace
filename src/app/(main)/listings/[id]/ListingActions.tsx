@@ -65,7 +65,7 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
         >
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10"
             style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}
             aria-label="Затвори"
           >
@@ -76,7 +76,7 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
             <>
               <button
                 onClick={e => { e.stopPropagation(); goPrev() }}
-                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center"
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center z-10"
                 style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}
                 aria-label="Предишна снимка"
               >
@@ -84,7 +84,7 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
               </button>
               <button
                 onClick={e => { e.stopPropagation(); goNext() }}
-                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center"
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center z-10"
                 style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer' }}
                 aria-label="Следваща снимка"
               >
@@ -94,14 +94,14 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
           )}
 
           <div
-            className="relative w-[92vw] h-[80vh] max-w-5xl"
+            className="relative w-[92vw] h-[80vh] max-w-5xl z-0"
             onClick={e => e.stopPropagation()}
           >
             <Image src={images[active]} alt={title} fill className="object-contain" />
           </div>
 
           {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-semibold px-3 py-1.5 rounded-full"
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-semibold px-3 py-1.5 rounded-full z-10"
               style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
               {active + 1} / {images.length}
             </div>
