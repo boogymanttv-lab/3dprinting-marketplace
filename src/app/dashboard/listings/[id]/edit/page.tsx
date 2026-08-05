@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Upload, X, Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { MATERIAL_LABELS, type MaterialType } from '@/types'
 
 interface Category { id: string; name: string; slug: string; parent_id: string | null; icon: string | null }
 
@@ -34,6 +35,7 @@ export default function EditListingPage() {
     price: '',
     quantity: '1',
     condition: 'new' as 'new' | 'used' | 'refurbished',
+    material: '' as MaterialType | '',
     category_id: '',
     city: '',
     tags: '',
@@ -77,6 +79,7 @@ export default function EditListingPage() {
         price: listing.price?.toString() ?? '',
         quantity: listing.quantity?.toString() ?? '1',
         condition: listing.condition ?? 'new',
+        material: listing.material ?? '',
         category_id: listing.category_id ?? '',
         city: listing.city ?? '',
         tags: (listing.tags ?? []).join(', '),
@@ -198,6 +201,7 @@ export default function EditListingPage() {
         price: parseFloat(form.price),
         quantity: parseInt(form.quantity),
         condition: form.condition,
+        material: form.material || null,
         category_id: form.category_id || null,
         city: form.city || null,
         tags,
@@ -368,6 +372,17 @@ export default function EditListingPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Материал</label>
+            <select className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none appearance-none" style={inputStyle}
+              value={form.material} onChange={e => setForm(f => ({ ...f, material: e.target.value as MaterialType | '' }))}>
+              <option value="">— Не е приложимо / друго —</option>
+              {(Object.keys(MATERIAL_LABELS) as MaterialType[]).map(m => (
+                <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>
+              ))}
+            </select>
           </div>
 
           {/* Active toggle */}

@@ -31,6 +31,7 @@ export default async function AdminEditListingPage({ params }: { params: Promise
         price: listing.price,
         quantity: listing.quantity,
         condition: listing.condition,
+        material: listing.material ?? '',
         category_id: listing.category_id ?? '',
         city: listing.city ?? '',
         is_active: listing.is_active,

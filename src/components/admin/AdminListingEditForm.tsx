@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { MATERIAL_LABELS, type MaterialType } from '@/types'
 
 interface Category { id: string; name: string; parent_id: string | null }
 
@@ -14,6 +15,7 @@ interface ListingData {
   price: number
   quantity: number
   condition: 'new' | 'used' | 'refurbished'
+  material: MaterialType | ''
   category_id: string
   city: string
   is_active: boolean
@@ -30,6 +32,7 @@ export function AdminListingEditForm({ listing, categories }: { listing: Listing
     price: listing.price.toString(),
     quantity: listing.quantity.toString(),
     condition: listing.condition,
+    material: listing.material,
     category_id: listing.category_id,
     city: listing.city,
     is_active: listing.is_active,
@@ -57,6 +60,7 @@ export function AdminListingEditForm({ listing, categories }: { listing: Listing
         price: parseFloat(form.price),
         quantity: parseInt(form.quantity),
         condition: form.condition,
+        material: form.material || null,
         category_id: form.category_id || null,
         city: form.city || null,
         is_active: form.is_active,
@@ -125,6 +129,17 @@ export function AdminListingEditForm({ listing, categories }: { listing: Listing
               <input type="number" min="1" className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none" style={inputStyle}
                 value={form.quantity} onChange={update('quantity')} />
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Материал</label>
+            <select className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none appearance-none" style={inputStyle}
+              value={form.material} onChange={e => setForm(f => ({ ...f, material: e.target.value as MaterialType | '' }))}>
+              <option value="">— Не е приложимо / друго —</option>
+              {(Object.keys(MATERIAL_LABELS) as MaterialType[]).map(m => (
+                <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>
+              ))}
+            </select>
           </div>
 
           <div>

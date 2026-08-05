@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const admin = createAdminClient()
 
   const update: Record<string, unknown> = {}
-  const allowed = ['title', 'description', 'price', 'currency', 'quantity', 'condition', 'city', 'category_id', 'is_active'] as const
+  const allowed = ['title', 'description', 'price', 'currency', 'quantity', 'condition', 'material', 'city', 'category_id', 'is_active'] as const
   for (const key of allowed) {
     if (key in body) update[key] = body[key]
   }

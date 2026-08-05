@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { formatPrice, formatRelativeTime } from '@/lib/utils'
 import { OrderForm } from './OrderForm'
 import { ReviewsList } from './ReviewsList'
-import type { Listing } from '@/types'
+import { MATERIAL_LABELS, type Listing } from '@/types'
 import { MapPin, Eye, Star } from 'lucide-react'
 import { ImageGallery, ShareButton, PhoneReveal } from './ListingActions'
 import type { Metadata } from 'next'
@@ -92,6 +92,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     description: l.description ?? undefined,
     image: l.images && l.images.length > 0 ? l.images : undefined,
     sku: l.id,
+    material: l.material ? MATERIAL_LABELS[l.material] : undefined,
     offers: {
       '@type': 'Offer',
       url: shareUrl,
@@ -188,6 +189,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               <span className="flex items-center gap-1"><Eye size={11} />{l.view_count} прегледа</span>
               <span>{formatRelativeTime(l.created_at)}</span>
             </div>
+
+            {l.material && (
+              <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-lg mb-4"
+                style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
+                🧵 {MATERIAL_LABELS[l.material]}
+              </span>
+            )}
 
             <OrderForm
               listing={l as Listing}

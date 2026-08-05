@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import type { Listing } from '@/types'
+import { MATERIAL_LABELS, type Listing } from '@/types'
 import { formatPrice, formatRelativeTime } from '@/lib/utils'
 import { MapPin } from 'lucide-react'
 import { FavoriteButton } from './FavoriteButton'
@@ -60,6 +60,13 @@ export function ListingCard({ listing }: ListingCardProps) {
               </span>
             )}
           </div>
+
+          {listing.material && (
+            <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-md mt-2"
+              style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
+              🧵 {MATERIAL_LABELS[listing.material]}
+            </span>
+          )}
         </div>
       </article>
 

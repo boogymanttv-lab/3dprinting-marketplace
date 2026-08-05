@@ -93,6 +93,21 @@ export interface Category {
 // ── Listing ───────────────────────────────────────
 export type ListingCondition = 'new' | 'used' | 'refurbished'
 
+export type MaterialType = 'pla' | 'petg' | 'abs' | 'tpu' | 'asa' | 'nylon' | 'resin' | 'wood_fill' | 'carbon_fiber' | 'metal_powder'
+
+export const MATERIAL_LABELS: Record<MaterialType, string> = {
+  pla: 'PLA',
+  petg: 'PETG',
+  abs: 'ABS',
+  tpu: 'TPU',
+  asa: 'ASA',
+  nylon: 'Nylon',
+  resin: 'Резин (Resin)',
+  wood_fill: 'Wood Fill',
+  carbon_fiber: 'Carbon Fiber',
+  metal_powder: 'Метален прах',
+}
+
 export interface Listing {
   id: string
   shop_id: string
@@ -103,6 +118,7 @@ export interface Listing {
   currency: string
   quantity: number
   condition: ListingCondition
+  material: MaterialType | null
   images: string[]
   tags: string[]
   city: string | null
