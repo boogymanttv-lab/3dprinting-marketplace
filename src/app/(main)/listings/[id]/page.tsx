@@ -93,6 +93,10 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     image: l.images && l.images.length > 0 ? l.images : undefined,
     sku: l.id,
     material: l.material ? MATERIAL_LABELS[l.material] : undefined,
+    // Продуктите са уникални/по поръчка на отделни продавачи — няма
+    // единен глобален идентификатор (GTIN/MPN). Това казва на Google,
+    // че липсата е нарочна, не пропусната.
+    identifierExists: false,
     offers: {
       '@type': 'Offer',
       url: shareUrl,
@@ -101,6 +105,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       availability: l.quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: l.condition === 'new' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
       seller: { '@type': 'Organization', name: l.shop.name },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+        applicableCountry: 'BG',
+      },
     },
     ...(l.shop.review_count > 0 ? {
       aggregateRating: {
