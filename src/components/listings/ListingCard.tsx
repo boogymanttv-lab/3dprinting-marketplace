@@ -17,11 +17,11 @@ export function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link href={`/listings/${listing.id}`} className="listing-card-link">
       <article
-        className="rounded-2xl overflow-hidden border transition-all duration-200 hover:-translate-y-0.5"
+        className="h-full flex flex-col rounded-2xl overflow-hidden border transition-all duration-200 hover:-translate-y-0.5"
         style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
       >
         {/* Image */}
-        <div className="relative aspect-[4/3] bg-[var(--bg3)] flex items-center justify-center">
+        <div className="relative aspect-[4/3] bg-[var(--bg3)] flex items-center justify-center flex-shrink-0">
           {mainImage ? (
             <Image src={mainImage} alt={listing.title} fill className="object-cover" />
           ) : (
@@ -39,8 +39,8 @@ export function ListingCard({ listing }: ListingCardProps) {
         </div>
 
         {/* Info */}
-        <div className="p-3.5">
-          <h3 className="text-sm font-semibold leading-snug mb-1.5 line-clamp-2"
+        <div className="p-3.5 flex flex-col flex-1">
+          <h3 className="text-sm font-semibold leading-snug mb-1.5 line-clamp-2 min-h-[2.5rem]"
             style={{ color: 'var(--text)' }}>
             {listing.title}
           </h3>
@@ -49,7 +49,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             {formatPrice(listing.price, listing.currency)}
           </p>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-auto">
             <span className="text-xs flex items-center gap-1" style={{ color: 'var(--muted)' }}>
               🏪 {listing.shop?.name ?? '—'}
             </span>
@@ -62,7 +62,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           </div>
 
           {listing.material && (
-            <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-md mt-2"
+            <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-md mt-2 self-start"
               style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
               🧵 {MATERIAL_LABELS[listing.material]}
             </span>
@@ -71,7 +71,7 @@ export function ListingCard({ listing }: ListingCardProps) {
       </article>
 
       <style>{`
-        .listing-card-link { text-decoration: none; display: block; }
+        .listing-card-link { text-decoration: none; display: block; height: 100%; }
         .listing-card-link article:hover { border-color: var(--accent); box-shadow: 0 8px 32px rgba(249,115,22,0.1); }
       `}</style>
     </Link>
