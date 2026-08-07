@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, Search } from 'lucide-react'
 import type { Metadata } from 'next'
+import { StoreFilters } from '@/components/stores/StoreFilters'
 
 export const revalidate = 60
 
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/stores' },
 }
 
-interface SearchParams { q?: string; city?: string }
+interface SearchParams { q?: string; city?: string; sort?: string; invoice?: string }
 
 export default async function StoresPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
@@ -22,7 +24,6 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
     .from('shops')
     .select('*, plan:plans(name, id)')
     .eq('is_active', true)
-    .order('rating', { ascending: false })
 
   if (params.city) {
     query = query.ilike('city', `%${params.city}%`)
@@ -32,10 +33,22 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
     query = query.ilike('name', `%${params.q}%`)
   }
 
-  const { data: shops } = await query.limit(48)
+  if (params.invoice === '1') {
+    query = query.not('eik', 'is', null)
+  }
+
+  // "Най-много обяви" sorts client-side below (not a shops column) —
+  // everything else can be ordered directly by Supabase.
+  if (params.sort === 'sales') {
+    query = query.order('total_sales', { ascending: false })
+  } else if (params.sort !== 'listings') {
+    query = query.order('rating', { ascending: false })
+  }
+
+  const { data: shopsRaw } = await query.limit(48)
 
   // Count active listings per shop (shown alongside sales)
-  const shopIds = (shops ?? []).map(s => s.id)
+  const shopIds = (shopsRaw ?? []).map(s => s.id)
   const listingCounts = new Map<string, number>()
   if (shopIds.length > 0) {
     const { data: listingRows } = await supabase
@@ -48,6 +61,10 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
       listingCounts.set(row.shop_id, (listingCounts.get(row.shop_id) ?? 0) + 1)
     }
   }
+
+  const shops = params.sort === 'listings'
+    ? [...(shopsRaw ?? [])].sort((a, b) => (listingCounts.get(b.id) ?? 0) - (listingCounts.get(a.id) ?? 0))
+    : shopsRaw
 
   // Get unique cities for filter
   const { data: allShops } = await supabase
@@ -110,6 +127,10 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
           </button>
         </form>
       </div>
+
+      <Suspense fallback={null}>
+        <StoreFilters />
+      </Suspense>
 
       {/* Grid */}
       {shops && shops.length > 0 ? (
