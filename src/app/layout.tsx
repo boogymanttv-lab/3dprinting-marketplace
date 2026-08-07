@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/nav/Navbar'
 import { CookieConsent } from '@/components/CookieConsent'
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
 
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main>{children}</main>
         <CookieConsent />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )
