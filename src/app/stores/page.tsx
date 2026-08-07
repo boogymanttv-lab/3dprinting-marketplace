@@ -115,9 +115,9 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
       {shops && shops.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {shops.map(shop => (
-            <Link key={shop.id} href={`/stores/${shop.slug}`}>
+            <Link key={shop.id} href={`/stores/${shop.slug}`} className="h-full">
               <div
-                className="rounded-2xl border p-5 h-full transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
+                className="rounded-2xl border p-5 h-full flex flex-col transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
                 style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
               >
                 {/* Avatar */}
@@ -168,7 +168,7 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-auto pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--muted)' }}>
                     <Package size={12} />
                     <span><strong style={{ color: 'var(--text)' }}>{listingCounts.get(shop.id) ?? 0}</strong> обяви</span>
