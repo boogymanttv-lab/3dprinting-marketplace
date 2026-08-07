@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/nav/Navbar'
 import { CookieConsent } from '@/components/CookieConsent'
@@ -36,6 +36,12 @@ export const metadata: Metadata = {
     description: 'Маркетплейс за 3D принтиране в България',
     images: ['/og-image.png'],
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0f0f13',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
