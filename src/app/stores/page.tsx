@@ -34,6 +34,21 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
 
   const { data: shops } = await query.limit(48)
 
+  // Count active listings per shop (shown alongside sales)
+  const shopIds = (shops ?? []).map(s => s.id)
+  const listingCounts = new Map<string, number>()
+  if (shopIds.length > 0) {
+    const { data: listingRows } = await supabase
+      .from('listings')
+      .select('shop_id')
+      .eq('is_active', true)
+      .in('shop_id', shopIds)
+
+    for (const row of listingRows ?? []) {
+      listingCounts.set(row.shop_id, (listingCounts.get(row.shop_id) ?? 0) + 1)
+    }
+  }
+
   // Get unique cities for filter
   const { data: allShops } = await supabase
     .from('shops')
@@ -153,7 +168,11 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
                   )}
                 </div>
 
-                <div className="flex gap-4 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--muted)' }}>
+                    <Package size={12} />
+                    <span><strong style={{ color: 'var(--text)' }}>{listingCounts.get(shop.id) ?? 0}</strong> обяви</span>
+                  </div>
                   <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--muted)' }}>
                     <ShoppingBag size={12} />
                     <span><strong style={{ color: 'var(--text)' }}>{shop.total_sales}</strong> продажби</span>
