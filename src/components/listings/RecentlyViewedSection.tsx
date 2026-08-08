@@ -23,12 +23,12 @@ export function RecentlyViewedSection({ excludeId }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-2 pb-6">
       <h2 className="text-sm font-bold mb-3" style={{ color: 'var(--muted)' }}>🕓 Наскоро разгледани</h2>
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex items-stretch gap-3 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'thin' }}>
         {items.map(item => (
           <Link
             key={item.id}
             href={`/listings/${item.id}`}
-            className="flex-shrink-0 w-32 sm:w-36 h-full rounded-xl overflow-hidden border transition-all hover:-translate-y-0.5 flex flex-col"
+            className="flex-shrink-0 self-stretch w-32 sm:w-36 rounded-xl overflow-hidden border transition-all hover:-translate-y-0.5 flex flex-col"
             style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
           >
             <div className="relative aspect-square bg-[var(--bg3)] flex items-center justify-center flex-shrink-0">
