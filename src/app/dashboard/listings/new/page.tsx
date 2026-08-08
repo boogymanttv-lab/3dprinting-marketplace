@@ -184,6 +184,13 @@ export default function NewListingPage() {
       return
     }
 
+    // IndexNow — известява Bing/Yandex моментално за новата обява (best-effort).
+    fetch('/api/indexnow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls: [`${window.location.origin}/listings/${listing.id}`] }),
+    }).catch(() => {})
+
     router.push(`/listings/${listing.id}?new=1`)
   }
 
