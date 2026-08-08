@@ -6,6 +6,7 @@ import { formatPrice, formatDate, formatRelativeTime } from '@/lib/utils'
 import { REQUEST_STATUS_LABELS, REQUEST_STATUS_COLORS, type RequestStatus } from '@/types'
 import { ArrowLeft, MapPin, Clock } from 'lucide-react'
 import { OfferForm, OffersList } from './RequestActions'
+import { DeleteRequestButton } from './DeleteRequestButton'
 import type { Metadata } from 'next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
@@ -78,6 +79,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         >
           {REQUEST_STATUS_LABELS[request.status as RequestStatus]}
         </span>
+        {isBuyer && requestOpen && (
+          <div className="ml-auto">
+            <DeleteRequestButton requestId={request.id} />
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border p-6 mb-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
