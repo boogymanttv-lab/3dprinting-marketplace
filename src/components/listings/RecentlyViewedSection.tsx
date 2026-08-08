@@ -33,7 +33,7 @@ export function RecentlyViewedSection({ excludeId }: Props) {
           >
             <div className="relative aspect-square bg-[var(--bg3)] flex items-center justify-center">
               {item.image ? (
-                <Image src={item.image} alt={item.title} fill className="object-cover" sizes="144px" />
+                <Image src={item.image} alt={item.title} fill className="object-cover" sizes="144px" unoptimized />
               ) : (
                 <span className="text-2xl opacity-40">📦</span>
               )}
