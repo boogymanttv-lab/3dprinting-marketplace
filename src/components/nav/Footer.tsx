@@ -74,6 +74,7 @@ export async function Footer() {
             <li><Link href="/stores" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Магазини</Link></li>
             <li><Link href="/blog" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Блог</Link></li>
             <li><Link href="/faq" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Въпроси</Link></li>
+            <li><Link href="/safety" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Безопасност</Link></li>
             <li><Link href="/plans" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Планове за продавачи</Link></li>
             <li><Link href="/terms" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Общи условия</Link></li>
             <li><Link href="/privacy" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Поверителност</Link></li>

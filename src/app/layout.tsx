@@ -4,6 +4,7 @@ import { Navbar } from '@/components/nav/Navbar'
 import { Footer } from '@/components/nav/Footer'
 import { CookieConsent } from '@/components/CookieConsent'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
+import { SafetyBanner } from '@/components/SafetyBanner'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
 
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
         <Navbar />
+        <SafetyBanner />
         <main>{children}</main>
         <Footer />
         <CookieConsent />
