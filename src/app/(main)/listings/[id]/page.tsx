@@ -328,6 +328,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               style={{ color: 'var(--muted)' }}>
               Виж целия магазин →
             </Link>
+
+            <a
+              href={`mailto:wellecfx@gmail.com?subject=${encodeURIComponent(`Сигнал за обява: ${l.title}`)}&body=${encodeURIComponent(`Обява: ${l.title}\nМагазин: ${l.shop.name}\nЛинк: ${shareUrl}\n\nОпиши проблема тук:\n`)}`}
+              className="flex items-center justify-center gap-1.5 text-xs mt-3 py-2 rounded-lg transition-colors hover:opacity-80"
+              style={{ color: 'var(--muted)', border: '1px solid var(--border)' }}
+            >
+              🚩 Докладвай обявата
+            </a>
           </div>
         </div>
       </div>

@@ -311,6 +311,15 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
               <PhoneReveal phone={shop.phone} />
             </div>
           )}
+
+          {/* Report */}
+          <a
+            href={`mailto:wellecfx@gmail.com?subject=${encodeURIComponent(`Сигнал за магазин: ${shop.name}`)}&body=${encodeURIComponent(`Магазин: ${shop.name}\nЛинк: ${shareUrl}\n\nОпиши проблема тук:\n`)}`}
+            className="flex items-center justify-center gap-1.5 text-xs mt-4 py-2.5 rounded-xl transition-colors hover:opacity-80"
+            style={{ color: 'var(--muted)', border: '1px solid var(--border)' }}
+          >
+            🚩 Докладвай магазина
+          </a>
         </div>
       </div>
     </div>

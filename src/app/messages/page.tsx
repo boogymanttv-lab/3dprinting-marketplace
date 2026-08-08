@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { formatRelativeTime } from '@/lib/utils'
-import { Send, ArrowLeft } from 'lucide-react'
+import { formatRelativeTime, formatDate } from '@/lib/utils'
+import { Send, ArrowLeft, Flag } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { Suspense } from 'react'
 
@@ -27,7 +27,7 @@ interface Conversation {
   seller_unread: number
   shop?: { name: string; slug: string }
   listing?: { title: string }
-  buyer?: { full_name: string | null }
+  buyer?: { full_name: string | null; created_at?: string; id?: string }
 }
 
 function MessagesContent() {
@@ -64,7 +64,7 @@ function MessagesContent() {
   async function loadConversations(uid: string, sid?: string) {
     let q = supabase
       .from('conversations')
-      .select('*, shop:shops(name, slug), listing:listings(title), buyer:profiles(full_name)')
+      .select('*, shop:shops(name, slug), listing:listings(title), buyer:profiles(id, full_name, created_at)')
       .order('last_message_at', { ascending: false })
 
     if (sid) {
@@ -88,7 +88,7 @@ function MessagesContent() {
         const { data: newConv } = await supabase
           .from('conversations')
           .insert({ shop_id: paramShopId, listing_id: paramListingId, buyer_id: uid })
-          .select('*, shop:shops(name, slug), listing:listings(title), buyer:profiles(full_name)')
+          .select('*, shop:shops(name, slug), listing:listings(title), buyer:profiles(id, full_name, created_at)')
           .single()
         if (newConv) {
           setConversations(prev => [newConv, ...prev])
@@ -239,19 +239,37 @@ function MessagesContent() {
                 style={{ background: 'linear-gradient(135deg, var(--accent), #f59e0b)' }}>
                 {isSeller(activeConv) ? '👤' : '🏪'}
               </div>
-              <div>
-                <p className="font-bold text-sm">
-                  {isSeller(activeConv) ? activeConv.buyer?.full_name : activeConv.shop?.name}
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">
+                  {isSeller(activeConv) ? (activeConv.buyer?.full_name ?? 'Купувач') : activeConv.shop?.name}
                 </p>
-                {activeConv.listing?.title && (
+                {isSeller(activeConv) && activeConv.buyer?.created_at ? (
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                    Член от {formatDate(activeConv.buyer.created_at)}
+                  </p>
+                ) : activeConv.listing?.title && (
+                  <p className="text-xs truncate" style={{ color: 'var(--muted)' }}>
                     Re: {activeConv.listing.title}
                   </p>
                 )}
               </div>
-              <div className="ml-auto flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }} />
-                <span className="text-xs" style={{ color: 'var(--green)' }}>Онлайн</span>
+              <div className="ml-auto flex items-center gap-3 flex-shrink-0">
+                <a
+                  href={`mailto:wellecfx@gmail.com?subject=${encodeURIComponent(
+                    isSeller(activeConv)
+                      ? `Сигнал за купувач: ${activeConv.buyer?.full_name ?? activeConv.buyer_id}`
+                      : `Сигнал за магазин: ${activeConv.shop?.name ?? ''}`
+                  )}&body=${encodeURIComponent(`Разговор ID: ${activeConv.id}\n\nОпиши проблема тук:\n`)}`}
+                  className="p-1.5 rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: 'var(--bg3)', color: 'var(--muted)' }}
+                  title="Докладвай"
+                >
+                  <Flag size={14} />
+                </a>
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--green)' }} />
+                  <span className="text-xs" style={{ color: 'var(--green)' }}>Онлайн</span>
+                </div>
               </div>
             </div>
 
