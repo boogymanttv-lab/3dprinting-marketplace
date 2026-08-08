@@ -72,6 +72,8 @@ export async function Footer() {
           <h3 className="text-sm font-bold mb-3">Информация</h3>
           <ul className="space-y-2">
             <li><Link href="/stores" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Магазини</Link></li>
+            <li><Link href="/blog" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Блог</Link></li>
+            <li><Link href="/faq" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Въпроси</Link></li>
             <li><Link href="/plans" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Планове за продавачи</Link></li>
             <li><Link href="/terms" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Общи условия</Link></li>
             <li><Link href="/privacy" className="text-xs hover:underline" style={{ color: 'var(--muted)' }}>Поверителност</Link></li>
