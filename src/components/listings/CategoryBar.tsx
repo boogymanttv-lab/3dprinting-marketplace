@@ -35,7 +35,7 @@ function CategoryBarInner({ categories, subCategories, activeCategory, activeSub
         {categories.map(cat => (
           <Link
             key={cat.id}
-            href={`/?category=${cat.slug}${q ? `&q=${q}` : ''}`}
+            href={`/category/${cat.slug}`}
             className="chip"
             data-active={activeCategory === cat.slug ? 'true' : 'false'}
           >
@@ -48,7 +48,7 @@ function CategoryBarInner({ categories, subCategories, activeCategory, activeSub
       {visibleSubs.length > 0 && (
         <div className="flex gap-2 flex-wrap mt-3">
           <Link
-            href={`/?category=${activeCategory}${q ? `&q=${q}` : ''}`}
+            href={`/category/${activeCategory}`}
             className="subchip"
             data-active={!activeSub ? 'true' : 'false'}
           >
@@ -57,7 +57,7 @@ function CategoryBarInner({ categories, subCategories, activeCategory, activeSub
           {visibleSubs.map(sub => (
             <Link
               key={sub.id}
-              href={`/?category=${activeCategory}&sub=${sub.slug}${q ? `&q=${q}` : ''}`}
+              href={`/category/${activeCategory}?sub=${sub.slug}`}
               className="subchip"
               data-active={activeSub === sub.slug ? 'true' : 'false'}
             >

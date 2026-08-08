@@ -135,14 +135,17 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         <span>›</span>
         {l.category?.parent && (
           <>
-            <Link href={`/?category=${l.category.parent.slug}`} className="hover:text-white transition-colors">
+            <Link href={`/category/${l.category.parent.slug}`} className="hover:text-white transition-colors">
               {l.category.parent.name}
             </Link>
             <span>›</span>
           </>
         )}
         {l.category && (
-          <Link href={`/?sub=${l.category.slug}`} className="hover:text-white transition-colors">
+          <Link
+            href={l.category.parent ? `/category/${l.category.parent.slug}?sub=${l.category.slug}` : `/category/${l.category.slug}`}
+            className="hover:text-white transition-colors"
+          >
             {l.category.name}
           </Link>
         )}

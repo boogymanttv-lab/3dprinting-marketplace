@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.co
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const admin = createAdminClient()
 
-  const [{ data: listings }, { data: shops }] = await Promise.all([
+  const [{ data: listings }, { data: shops }, { data: categories }] = await Promise.all([
     admin
       .from('listings')
       .select('id, updated_at, is_active, shop:shops!inner(is_active)')
@@ -18,6 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, updated_at')
       .eq('is_active', true)
       .limit(2000),
+    admin
+      .from('categories')
+      .select('slug')
+      .is('parent_id', null),
   ])
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -42,5 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticRoutes, ...shopRoutes, ...listingRoutes]
+  const categoryRoutes: MetadataRoute.Sitemap = (categories ?? []).map(c => ({
+    url: `${BASE_URL}/category/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily',
+    priority: 0.7,
+  }))
+
+  return [...staticRoutes, ...categoryRoutes, ...shopRoutes, ...listingRoutes]
 }
