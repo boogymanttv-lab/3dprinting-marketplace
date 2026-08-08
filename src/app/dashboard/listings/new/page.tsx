@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Upload, X, Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { MATERIAL_LABELS, type MaterialType } from '@/types'
+import { compressImage } from '@/lib/image-compress'
 
 interface Category { id: string; name: string; slug: string; parent_id: string | null; icon: string | null }
 
@@ -53,33 +54,6 @@ export default function NewListingPage() {
   const update = (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm(f => ({ ...f, [field]: e.target.value }))
-
-  // Compress image to max 1920px, JPEG 85% — phone photos (10MB+) become ~300-600KB
-  async function compressImage(file: File): Promise<File> {
-    return new Promise(resolve => {
-      const img = new Image()
-      const url = URL.createObjectURL(file)
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-        const MAX = 1920
-        let { width, height } = img
-        if (width > MAX || height > MAX) {
-          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-          else { width = Math.round(width * MAX / height); height = MAX }
-        }
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
-        canvas.toBlob(blob => {
-          if (!blob) { resolve(file); return }
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
-        }, 'image/jpeg', 0.85)
-      }
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
-      img.src = url
-    })
-  }
 
   async function handleFiles(files: FileList | null) {
     if (!files) return

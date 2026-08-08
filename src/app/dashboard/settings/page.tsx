@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Save, LogOut, User, Store, Building2, Lock, Upload, X, CreditCard, ExternalLink, PauseCircle, Trash2, AlertTriangle, Landmark, CheckCircle2 } from 'lucide-react'
+import { compressImage } from '@/lib/image-compress'
 
 type Tab = 'profile' | 'shop' | 'company' | 'billing' | 'password'
 
@@ -197,12 +198,13 @@ export default function SettingsPage() {
     if (!user) return
 
     setUploading(true)
-    const ext = file.name.split('.').pop()
+    const compressedFile = await compressImage(file)
+    const ext = compressedFile.name.split('.').pop()
     const path = `${user.id}/${type}-${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from('shop-images')
-      .upload(path, file, { upsert: true })
+      .upload(path, compressedFile, { upsert: true })
 
     if (uploadError) {
       setError('Грешка при качване на снимка.')
