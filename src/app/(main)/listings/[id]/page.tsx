@@ -65,7 +65,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .select(`
       *,
       shop:shops!inner(*, owner:profiles(full_name, avatar_url)),
-      category:categories(id, name, slug, parent:categories(name, slug))
+      category:categories(id, name, slug, parent_id)
     `)
     .eq('id', id)
     .eq('is_active', true)
@@ -76,6 +76,19 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   // Increment view count (ignore errors)
   await supabase.from('listings').update({ view_count: (listing.view_count ?? 0) + 1 }).eq('id', id)
+
+  // Родителската категория се взима с отделна заявка (вместо вложен self-join,
+  // който при таблица, реферираща сама себе си, понякога връща грешни данни).
+  let categoryParent: { name: string; slug: string } | null = null
+  const categoryParentId = (listing.category as { parent_id?: string | null } | null)?.parent_id
+  if (categoryParentId) {
+    const { data: parentCat } = await supabase
+      .from('categories')
+      .select('name, slug')
+      .eq('id', categoryParentId)
+      .maybeSingle()
+    categoryParent = parentCat
+  }
 
   // Fetch reviews
   const { data: reviews } = await supabase
@@ -143,11 +156,11 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const breadcrumbItems = [
     { name: 'Начало', url: SITE_URL },
-    ...(l.category?.parent ? [{ name: l.category.parent.name, url: `${SITE_URL}/category/${l.category.parent.slug}` }] : []),
+    ...(categoryParent ? [{ name: categoryParent.name, url: `${SITE_URL}/category/${categoryParent.slug}` }] : []),
     ...(l.category ? [{
       name: l.category.name,
-      url: l.category.parent
-        ? `${SITE_URL}/category/${l.category.parent.slug}?sub=${l.category.slug}`
+      url: categoryParent
+        ? `${SITE_URL}/category/${categoryParent.slug}?sub=${l.category.slug}`
         : `${SITE_URL}/category/${l.category.slug}`,
     }] : []),
     { name: l.title, url: shareUrl },
@@ -186,17 +199,17 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: 'var(--muted)' }}>
         <Link href="/" className="hover:text-white transition-colors">Начало</Link>
         <span>›</span>
-        {l.category?.parent && (
+        {categoryParent && (
           <>
-            <Link href={`/category/${l.category.parent.slug}`} className="hover:text-white transition-colors">
-              {l.category.parent.name}
+            <Link href={`/category/${categoryParent.slug}`} className="hover:text-white transition-colors">
+              {categoryParent.name}
             </Link>
             <span>›</span>
           </>
         )}
         {l.category && (
           <Link
-            href={l.category.parent ? `/category/${l.category.parent.slug}?sub=${l.category.slug}` : `/category/${l.category.slug}`}
+            href={categoryParent ? `/category/${categoryParent.slug}?sub=${l.category.slug}` : `/category/${l.category.slug}`}
             className="hover:text-white transition-colors"
           >
             {l.category.name}
