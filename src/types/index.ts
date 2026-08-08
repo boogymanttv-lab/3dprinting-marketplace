@@ -124,6 +124,7 @@ export interface Listing {
   city: string | null
   is_active: boolean
   is_featured: boolean
+  is_request_order?: boolean
   view_count: number
   moderation_status: 'active' | 'flagged'
   moderation_note: string | null
@@ -134,6 +135,63 @@ export interface Listing {
   // Joins
   shop?: Shop
   category?: Category
+}
+
+// ── Requests ("Заяви поръчка") ─────────────────────
+export type RequestStatus = 'open' | 'assigned' | 'expired' | 'cancelled'
+export type OfferStatus = 'pending' | 'accepted' | 'declined'
+
+export interface PrintRequest {
+  id: string
+  buyer_id: string
+  category_id: string | null
+  title: string
+  description: string
+  image_url: string | null
+  budget_min: number | null
+  budget_max: number | null
+  currency: string
+  city: string | null
+  deadline: string | null
+  status: RequestStatus
+  offer_count: number
+  accepted_offer_id: string | null
+  created_at: string
+  updated_at: string
+  // Joins
+  buyer?: Profile
+  category?: Category
+  offers?: RequestOffer[]
+}
+
+export interface RequestOffer {
+  id: string
+  request_id: string
+  shop_id: string
+  price: number
+  currency: string
+  eta_days: number | null
+  message: string | null
+  status: OfferStatus
+  listing_id: string | null
+  created_at: string
+  // Joins
+  shop?: Shop
+  request?: PrintRequest
+}
+
+export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
+  open: 'Отворена',
+  assigned: 'Възложена',
+  expired: 'Изтекла',
+  cancelled: 'Отказана',
+}
+
+export const REQUEST_STATUS_COLORS: Record<RequestStatus, { bg: string; text: string }> = {
+  open:      { bg: 'rgba(99,102,241,0.15)', text: '#818cf8' },
+  assigned:  { bg: 'rgba(34,197,94,0.15)',  text: '#22c55e' },
+  expired:   { bg: 'rgba(148,163,184,0.15)', text: '#94a3b8' },
+  cancelled: { bg: 'rgba(239,68,68,0.15)',  text: '#f87171' },
 }
 
 // ── Address ───────────────────────────────────────

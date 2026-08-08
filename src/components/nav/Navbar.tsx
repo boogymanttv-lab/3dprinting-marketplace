@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import {
   Home, Store, MessageCircle, User as UserIcon,
-  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart, Shield
+  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart, Shield, ClipboardList
 } from 'lucide-react'
 
 export function Navbar() {
@@ -112,6 +112,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             {[
               { href: '/', label: 'Обяви' },
+              { href: '/requests', label: 'Заявки' },
               { href: '/stores', label: 'Магазини' },
             ].map(link => (
               <Link
@@ -290,19 +291,20 @@ export function Navbar() {
       >
         <div className="flex justify-around items-center py-2 pb-safe">
           {[
-            { href: '/', icon: <Home size={22} />, label: 'Начало' },
-            { href: '/stores', icon: <Store size={22} />, label: 'Магазини' },
-            { href: '/messages', icon: <MessageCircle size={22} />, label: 'Чат' },
-            { href: user ? '/dashboard/settings' : '/login', icon: <UserIcon size={22} />, label: 'Профил' },
+            { href: '/', icon: <Home size={20} />, label: 'Начало' },
+            { href: '/requests', icon: <ClipboardList size={20} />, label: 'Заявки' },
+            { href: '/stores', icon: <Store size={20} />, label: 'Магазини' },
+            { href: '/messages', icon: <MessageCircle size={20} />, label: 'Чат' },
+            { href: user ? '/dashboard/settings' : '/login', icon: <UserIcon size={20} />, label: 'Профил' },
           ].map(item => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center gap-1 px-3 py-1"
+              className="flex flex-col items-center gap-1 px-2 py-1"
               style={{ color: pathname === item.href ? 'var(--accent)' : 'var(--muted)' }}
             >
               {item.icon}
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           ))}
         </div>

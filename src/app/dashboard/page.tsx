@@ -34,6 +34,7 @@ export default async function DashboardPage() {
     .select('*', { count: 'exact', head: true })
     .eq('shop_id', shop.id)
     .eq('is_active', true)
+    .eq('is_request_order', false)
 
   const { count: newOrderCount } = await supabase
     .from('orders')
@@ -80,6 +81,7 @@ export default async function DashboardPage() {
             { href: '/dashboard/listings', icon: '📋', label: 'Мои обяви' },
             { href: '/dashboard/orders', icon: '🛒', label: 'Получени поръчки' },
             { href: '/dashboard/my-orders', icon: '📦', label: 'Моите поръчки' },
+            { href: '/dashboard/requests', icon: '📝', label: 'Заявки' },
             { href: '/messages', icon: '💬', label: 'Съобщения' },
             { href: '/dashboard/reviews', icon: '⭐', label: 'Ревюта' },
             { href: '/plans', icon: '💳', label: 'Абонамент' },

@@ -64,6 +64,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
       .select('*, shop:shops!inner(id, name, city, rating, is_active), category:categories(id, name, slug)')
       .eq('is_active', true)
       .eq('shop.is_active', true)
+      .eq('is_request_order', false)
       .ilike('city', `%${city.name}%`)
       .order('created_at', { ascending: false })
       .limit(48),

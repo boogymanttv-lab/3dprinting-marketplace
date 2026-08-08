@@ -110,6 +110,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       .eq('category_id', l.category_id)
       .eq('is_active', true)
       .eq('shop.is_active', true)
+      .eq('is_request_order', false)
       .neq('id', id)
       .order('created_at', { ascending: false })
       .limit(5)

@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('id, updated_at, is_active, shop:shops!inner(is_active)')
       .eq('is_active', true)
       .eq('shop.is_active', true)
+      .eq('is_request_order', false)
       .limit(5000),
     admin
       .from('shops')
@@ -34,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
     { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.5 },
     { url: `${BASE_URL}/faq`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE_URL}/requests`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.7 },
   ]
 
   const blogRoutes: MetadataRoute.Sitemap = BLOG_POSTS.map(p => ({

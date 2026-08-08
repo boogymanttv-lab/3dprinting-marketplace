@@ -10,7 +10,9 @@ import type { Listing, Shop, Category } from '@/types'
 
 export const revalidate = 60
 
-interface SearchParams { category?: string; sub?: string; q?: string; tab?: string; deactivated?: string; account_deleted?: string }
+interface SearchParams { category?: string; sub?: string; q?: string; tab?: string; deactivated?: string; account_deleted?: string; page?: string }
+
+const PAGE_SIZE = 15
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
@@ -26,14 +28,20 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const parentCats = allCategories?.filter(c => !c.parent_id) ?? []
   const subCats = allCategories?.filter(c => c.parent_id) ?? []
 
+  // Пагинация
+  const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
   // Build query for listings
   let listingsQuery = supabase
     .from('listings')
-    .select('*, shop:shops!inner(id, name, city, rating, is_active), category:categories(id, name, slug)')
+    .select('*, shop:shops!inner(id, name, city, rating, is_active), category:categories(id, name, slug)', { count: 'exact' })
     .eq('is_active', true)
     .eq('shop.is_active', true)
+    .eq('is_request_order', false)
     .order('created_at', { ascending: false })
-    .limit(24)
+    .range(from, to)
 
   if (params.q) {
     listingsQuery = listingsQuery.textSearch('title', params.q, { type: 'websearch' })
@@ -51,7 +59,18 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     }
   }
 
-  const { data: listings } = await listingsQuery
+  const { data: listings, count: listingTotal } = await listingsQuery
+  const totalPages = Math.max(1, Math.ceil((listingTotal ?? 0) / PAGE_SIZE))
+
+  const pageHref = (n: number) => {
+    const qs = new URLSearchParams()
+    if (params.category) qs.set('category', params.category)
+    if (params.sub) qs.set('sub', params.sub)
+    if (params.q) qs.set('q', params.q)
+    if (n > 1) qs.set('page', String(n))
+    const s = qs.toString()
+    return s ? `/?${s}` : '/'
+  }
 
   // Fetch shops
   const { data: shops } = await supabase
@@ -64,7 +83,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   // Статистики за социално доказателство в hero секцията
   const [{ count: shopCount }, { count: listingCount }, { data: cityRows }] = await Promise.all([
     supabase.from('shops').select('id', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('listings').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('listings').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('is_request_order', false),
     supabase.from('shops').select('city').eq('is_active', true).not('city', 'is', null),
   ])
   const cityCount = new Set((cityRows ?? []).map(r => r.city?.trim().toLowerCase()).filter(Boolean)).size
@@ -115,8 +134,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         )}
       </section>
 
-      <RecentlyViewedSection />
-
       {/* Category chips */}
       <Suspense>
         <CategoryBar
@@ -155,11 +172,49 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         {tab === 'listings' ? (
           <>
             {listings && listings.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {listings.map(l => (
-                  <ListingCard key={l.id} listing={l as Listing} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {listings.map(l => (
+                    <ListingCard key={l.id} listing={l as Listing} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <Link
+                      href={pageHref(page - 1)}
+                      aria-disabled={page <= 1}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                      style={{
+                        color: page <= 1 ? 'var(--muted)' : 'var(--text)',
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        pointerEvents: page <= 1 ? 'none' : 'auto',
+                        opacity: page <= 1 ? 0.5 : 1,
+                      }}
+                    >
+                      ← Назад
+                    </Link>
+                    <span className="text-sm px-3" style={{ color: 'var(--muted)' }}>
+                      Страница {page} от {totalPages}
+                    </span>
+                    <Link
+                      href={pageHref(page + 1)}
+                      aria-disabled={page >= totalPages}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                      style={{
+                        color: page >= totalPages ? 'var(--muted)' : 'var(--text)',
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        pointerEvents: page >= totalPages ? 'none' : 'auto',
+                        opacity: page >= totalPages ? 0.5 : 1,
+                      }}
+                    >
+                      Напред →
+                    </Link>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-24" style={{ color: 'var(--muted)' }}>
                 <div className="text-5xl mb-4">📭</div>
@@ -211,6 +266,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
         )}
       </div>
+
+      {tab === 'listings' && <RecentlyViewedSection />}
     </div>
   )
 }

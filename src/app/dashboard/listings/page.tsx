@@ -26,6 +26,7 @@ export default async function ListingsPage() {
     .from('listings')
     .select('*, category:categories(name)')
     .eq('shop_id', shop.id)
+    .eq('is_request_order', false)
     .order('created_at', { ascending: false })
 
   const planData = Array.isArray(shop.plan) ? shop.plan[0] : shop.plan

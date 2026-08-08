@@ -101,6 +101,7 @@ export default function NewListingPage() {
         .select('*', { count: 'exact', head: true })
         .eq('shop_id', shop.id)
         .eq('is_active', true)
+        .eq('is_request_order', false)
 
       if ((count ?? 0) >= maxListings) {
         setError(`Достигна лимита от ${maxListings} обяви за твоя план. Надгради от Абонамент.`)
