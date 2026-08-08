@@ -7,6 +7,7 @@ import type { Listing } from '@/types'
 import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, ExternalLink } from 'lucide-react'
 import { ShareButton, PhoneReveal } from './StoreActions'
+import { VerifiedSellerBadge } from '@/components/shops/VerifiedSellerBadge'
 import type { Metadata } from 'next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
@@ -166,6 +167,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
                     {shop.plan?.name}
                   </span>
                 )}
+                {shop.stripe_connect_charges_enabled && <VerifiedSellerBadge size="md" />}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm mb-3" style={{ color: 'var(--muted)' }}>

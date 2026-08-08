@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { MapPin, Star, Package, ShoppingBag, Search } from 'lucide-react'
 import type { Metadata } from 'next'
 import { StoreFilters } from '@/components/stores/StoreFilters'
+import { VerifiedSellerBadge } from '@/components/shops/VerifiedSellerBadge'
 
 export const revalidate = 60
 
@@ -164,6 +165,12 @@ export default async function StoresPage({ searchParams }: { searchParams: Promi
                     </span>
                   )}
                 </div>
+
+                {shop.stripe_connect_charges_enabled && (
+                  <div className="mb-1">
+                    <VerifiedSellerBadge />
+                  </div>
+                )}
 
                 {/* Description */}
                 {shop.description && (

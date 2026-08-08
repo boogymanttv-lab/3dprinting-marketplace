@@ -9,6 +9,8 @@ import { MATERIAL_LABELS, type Listing } from '@/types'
 import { MapPin, Eye, Star } from 'lucide-react'
 import { ImageGallery, ShareButton, PhoneReveal } from './ListingActions'
 import { ListingCard } from '@/components/listings/ListingCard'
+import { RecordRecentlyViewed } from '@/components/listings/RecordRecentlyViewed'
+import { VerifiedSellerBadge } from '@/components/shops/VerifiedSellerBadge'
 import type { Metadata } from 'next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
@@ -172,6 +174,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      <RecordRecentlyViewed
+        id={l.id}
+        title={l.title}
+        price={l.price}
+        currency={l.currency}
+        image={l.images?.[0] ?? null}
+        shopName={l.shop?.name ?? null}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: 'var(--muted)' }}>
         <Link href="/" className="hover:text-white transition-colors">Начало</Link>
@@ -276,7 +286,10 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                 }
               </div>
               <div>
-                <p className="font-bold">{l.shop.name}</p>
+                <p className="font-bold flex items-center gap-2 flex-wrap">
+                  {l.shop.name}
+                  {l.shop.stripe_connect_charges_enabled && <VerifiedSellerBadge />}
+                </p>
                 <p className="text-xs flex items-center gap-1" style={{ color: 'var(--muted)' }}>
                   {l.shop.rating > 0 && (
                     <><Star size={11} className="fill-amber-400 text-amber-400" />

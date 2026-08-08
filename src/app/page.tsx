@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { CategoryBar } from '@/components/listings/CategoryBar'
+import { RecentlyViewedSection } from '@/components/listings/RecentlyViewedSection'
 import { SearchBar } from '@/components/search/SearchBar'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -113,6 +114,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
         )}
       </section>
+
+      <RecentlyViewedSection />
 
       {/* Category chips */}
       <Suspense>
