@@ -96,12 +96,33 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     } : {}),
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Начало', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Магазини', item: `${SITE_URL}/stores` },
+      { '@type': 'ListItem', position: 3, name: shop.name, item: shareUrl },
+    ],
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <nav className="flex items-center gap-2 text-xs mb-4" style={{ color: 'var(--muted)' }}>
+        <Link href="/" className="hover:text-white transition-colors">Начало</Link>
+        <span>›</span>
+        <Link href="/stores" className="hover:text-white transition-colors">Магазини</Link>
+        <span>›</span>
+        <span className="truncate max-w-[200px]">{shop.name}</span>
+      </nav>
       {/* Shop Header */}
       <div
         className="rounded-2xl border overflow-hidden mb-8"

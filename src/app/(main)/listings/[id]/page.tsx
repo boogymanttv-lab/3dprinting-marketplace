@@ -8,6 +8,7 @@ import { ReviewsList } from './ReviewsList'
 import { MATERIAL_LABELS, type Listing } from '@/types'
 import { MapPin, Eye, Star } from 'lucide-react'
 import { ImageGallery, ShareButton, PhoneReveal } from './ListingActions'
+import { ListingCard } from '@/components/listings/ListingCard'
 import type { Metadata } from 'next'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
@@ -85,6 +86,21 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const l = listing as Listing & { shop: NonNullable<Listing['shop']> & { phone?: string } }
   const shareUrl = `${SITE_URL}/listings/${id}`
 
+  // Подобни обяви — от същата категория, различни от текущата
+  let similarListings: Listing[] = []
+  if (l.category_id) {
+    const { data: similar } = await supabase
+      .from('listings')
+      .select('*, shop:shops!inner(id, name, city, rating, is_active), category:categories(id, name, slug)')
+      .eq('category_id', l.category_id)
+      .eq('is_active', true)
+      .eq('shop.is_active', true)
+      .neq('id', id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    similarListings = (similar ?? []) as Listing[]
+  }
+
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -123,11 +139,38 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     } : {}),
   }
 
+  const breadcrumbItems = [
+    { name: 'Начало', url: SITE_URL },
+    ...(l.category?.parent ? [{ name: l.category.parent.name, url: `${SITE_URL}/category/${l.category.parent.slug}` }] : []),
+    ...(l.category ? [{
+      name: l.category.name,
+      url: l.category.parent
+        ? `${SITE_URL}/category/${l.category.parent.slug}?sub=${l.category.slug}`
+        : `${SITE_URL}/category/${l.category.slug}`,
+    }] : []),
+    { name: l.title, url: shareUrl },
+  ]
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: 'var(--muted)' }}>
@@ -262,6 +305,18 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {/* Similar listings */}
+      {similarListings.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-lg font-bold mb-4">Подобни обяви</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {similarListings.map(sl => (
+              <ListingCard key={sl.id} listing={sl} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

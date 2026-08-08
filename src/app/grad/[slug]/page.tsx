@@ -94,9 +94,19 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
     },
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Начало', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: `3D печат в ${city.name}`, item: `${SITE_URL}/grad/${slug}` },
+    ],
+  }
+
   return (
     <div>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       {/* Hero */}
       <section

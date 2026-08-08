@@ -60,6 +60,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     .order('rating', { ascending: false })
     .limit(12)
 
+  // Статистики за социално доказателство в hero секцията
+  const [{ count: shopCount }, { count: listingCount }, { data: cityRows }] = await Promise.all([
+    supabase.from('shops').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('listings').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('shops').select('city').eq('is_active', true).not('city', 'is', null),
+  ])
+  const cityCount = new Set((cityRows ?? []).map(r => r.city?.trim().toLowerCase()).filter(Boolean)).size
+
   return (
     <div>
       {(params.deactivated === '1' || params.account_deleted === '1') && (
@@ -85,6 +93,25 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           Купувай и продавай филамент, принтери и 3D принтирани продукти
         </p>
         <SearchBar defaultValue={params.q} />
+
+        {(shopCount ?? 0) > 0 && (
+          <div className="flex items-center justify-center gap-6 sm:gap-10 mt-9 flex-wrap">
+            <div className="text-center">
+              <div className="text-2xl font-black" style={{ color: 'var(--accent)' }}>{shopCount}</div>
+              <div className="text-xs" style={{ color: 'var(--muted)' }}>{shopCount === 1 ? 'магазин' : 'магазина'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-black" style={{ color: 'var(--accent)' }}>{listingCount ?? 0}</div>
+              <div className="text-xs" style={{ color: 'var(--muted)' }}>{listingCount === 1 ? 'обява' : 'обяви'}</div>
+            </div>
+            {cityCount > 0 && (
+              <div className="text-center">
+                <div className="text-2xl font-black" style={{ color: 'var(--accent)' }}>{cityCount}</div>
+                <div className="text-xs" style={{ color: 'var(--muted)' }}>{cityCount === 1 ? 'град' : 'града'}</div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Category chips */}
