@@ -1,7 +1,23 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Каноничен домейн — тези дублиращи хостове (vercel.app, apex без www)
+// се пренасочват (301) тук, за да няма дублирано съдържание в Google.
+const CANONICAL_HOST = 'www.3dprintingbg.com'
+const DUPLICATE_HOSTS = new Set([
+  '3dprintingbg.com',
+  '3dprinting-marketplace.vercel.app',
+])
+
 export async function proxy(request: NextRequest) {
+  const host = request.headers.get('host') ?? ''
+  if (DUPLICATE_HOSTS.has(host)) {
+    const url = new URL(request.url)
+    url.host = CANONICAL_HOST
+    url.protocol = 'https'
+    return NextResponse.redirect(url, 301)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
