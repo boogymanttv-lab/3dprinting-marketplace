@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { BULGARIAN_CITIES } from '@/lib/cities'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
 
@@ -53,5 +54,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticRoutes, ...categoryRoutes, ...shopRoutes, ...listingRoutes]
+  const cityChecks = await Promise.all(
+    BULGARIAN_CITIES.map(async city => {
+      const [{ count: shopCount }, { count: listingCount }] = await Promise.all([
+        admin.from('shops').select('id', { count: 'exact', head: true }).eq('is_active', true).ilike('city', `%${city.name}%`),
+        admin.from('listings').select('id', { count: 'exact', head: true }).eq('is_active', true).ilike('city', `%${city.name}%`),
+      ])
+      return { city, has: (shopCount ?? 0) > 0 || (listingCount ?? 0) > 0 }
+    })
+  )
+
+  const cityRoutes: MetadataRoute.Sitemap = cityChecks
+    .filter(c => c.has)
+    .map(c => ({
+      url: `${BASE_URL}/grad/${c.city.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.6,
+    }))
+
+  return [...staticRoutes, ...categoryRoutes, ...cityRoutes, ...shopRoutes, ...listingRoutes]
 }

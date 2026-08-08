@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/nav/Navbar'
+import { Footer } from '@/components/nav/Footer'
 import { CookieConsent } from '@/components/CookieConsent'
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister'
 
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="pb-20 md:pb-0" suppressHydrationWarning>
         <Navbar />
         <main>{children}</main>
+        <Footer />
         <CookieConsent />
         <ServiceWorkerRegister />
       </body>
