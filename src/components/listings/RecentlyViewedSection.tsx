@@ -28,21 +28,21 @@ export function RecentlyViewedSection({ excludeId }: Props) {
           <Link
             key={item.id}
             href={`/listings/${item.id}`}
-            className="flex-shrink-0 w-32 sm:w-36 rounded-xl overflow-hidden border transition-all hover:-translate-y-0.5"
+            className="flex-shrink-0 w-32 sm:w-36 h-full rounded-xl overflow-hidden border transition-all hover:-translate-y-0.5 flex flex-col"
             style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
           >
-            <div className="relative aspect-square bg-[var(--bg3)] flex items-center justify-center">
+            <div className="relative aspect-square bg-[var(--bg3)] flex items-center justify-center flex-shrink-0">
               {item.image ? (
                 <Image src={item.image} alt={item.title} fill className="object-cover" sizes="144px" unoptimized />
               ) : (
                 <span className="text-2xl opacity-40">📦</span>
               )}
             </div>
-            <div className="p-2">
-              <p className="text-xs font-semibold leading-snug line-clamp-2 mb-1" style={{ color: 'var(--text)' }}>
+            <div className="p-2 flex flex-col flex-1">
+              <p className="text-xs font-semibold leading-snug line-clamp-2 mb-1 min-h-[2rem]" style={{ color: 'var(--text)' }}>
                 {item.title}
               </p>
-              <p className="text-xs font-black" style={{ color: 'var(--accent)' }}>
+              <p className="text-xs font-black mt-auto" style={{ color: 'var(--accent)' }}>
                 {formatPrice(item.price, item.currency)}
               </p>
             </div>
