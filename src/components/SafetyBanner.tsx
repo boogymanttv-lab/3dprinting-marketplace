@@ -1,31 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 
-const STORAGE_KEY = 'safety-banner-dismissed'
-
 export function SafetyBanner() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true)
-    } catch {
-      // localStorage недостъпен (private mode) — показваме банера без запомняне.
-      setVisible(true)
-    }
-  }, [])
-
-  const dismiss = () => {
-    setVisible(false)
-    try {
-      localStorage.setItem(STORAGE_KEY, '1')
-    } catch {
-      // Игнорираме — банерът просто ще се появи пак следващия път.
-    }
-  }
+  const [visible, setVisible] = useState(true)
 
   if (!visible) return null
 
@@ -53,7 +33,7 @@ export function SafetyBanner() {
           Научи повече
         </Link>
         <button
-          onClick={dismiss}
+          onClick={() => setVisible(false)}
           aria-label="Затвори"
           className="p-1 rounded-md hover:opacity-70 transition-opacity"
           style={{ color: 'var(--muted)' }}
