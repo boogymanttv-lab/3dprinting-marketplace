@@ -46,10 +46,43 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: '3DPrintingBG',
+  alternateName: '3D Printing BG',
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon-512.png`,
+  description: 'Маркетплейс за 3D принтиране в България — филамент, принтери и 3D принтирани продукти от независими продавачи.',
+  // Добави тук линкове към официални Facebook/Instagram страници, когато ги направиш:
+  // sameAs: ['https://www.facebook.com/3dprintingbg', 'https://www.instagram.com/3dprintingbg'],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'wellecfx@gmail.com',
+    contactType: 'customer service',
+    areaServed: 'BG',
+    availableLanguage: 'Bulgarian',
+  },
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: '3DPrintingBG',
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/?q={search_term_string}` },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bg">
       <body className="pb-20 md:pb-0" suppressHydrationWarning>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
         <Navbar />
         <main>{children}</main>
         <Footer />
