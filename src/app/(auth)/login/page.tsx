@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Turnstile } from '@/components/Turnstile'
 
 export default function LoginPage() {
   return (
@@ -19,16 +20,29 @@ function LoginForm() {
   const redirectTo = searchParams.get('redirectTo') || '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const captchaRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
+    if (captchaRequired && !captchaToken) {
+      setError('Моля, потвърди, че не си робот.')
+      return
+    }
+
+    setLoading(true)
+
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken: captchaToken ?? undefined },
+    })
 
     if (error) {
       if (error.code === 'email_not_confirmed' || error.message.toLowerCase().includes('email not confirmed')) {
@@ -104,11 +118,16 @@ function LoginForm() {
             />
           </div>
 
+          <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (captchaRequired && !captchaToken)}
             className="w-full py-3 rounded-lg text-sm font-bold transition-opacity"
-            style={{ background: 'var(--accent)', color: '#fff', opacity: loading ? 0.7 : 1 }}
+            style={{
+              background: 'var(--accent)', color: '#fff',
+              opacity: (loading || (captchaRequired && !captchaToken)) ? 0.7 : 1,
+            }}
           >
             {loading ? 'Влизане...' : 'Влез'}
           </button>
