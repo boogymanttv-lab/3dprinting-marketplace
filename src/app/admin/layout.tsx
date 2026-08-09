@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getCurrentUserAndRole, hasMinRole } from '@/lib/admin-auth'
 import { ROLE_LABELS } from '@/types'
-import { LayoutDashboard, Users, Package, Store } from 'lucide-react'
+import { LayoutDashboard, Users, Package, Store, ShoppingBag } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin', icon: <LayoutDashboard size={16} />, label: 'Табло', show: true },
     { href: '/admin/listings', icon: <Package size={16} />, label: 'Обяви', show: true },
     { href: '/admin/shops', icon: <Store size={16} />, label: 'Магазини', show: hasMinRole(role, 'operator') },
+    { href: '/admin/orders', icon: <ShoppingBag size={16} />, label: 'Поръчки', show: hasMinRole(role, 'operator') },
     { href: '/admin/users', icon: <Users size={16} />, label: 'Потребители', show: hasMinRole(role, 'operator') },
   ]
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ROLE_LABELS, type UserRole } from '@/types'
-import { CheckCircle2, XCircle, PauseCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, PauseCircle, Trash2 } from 'lucide-react'
 
 export interface AdminUserRow {
   id: string
@@ -37,6 +37,20 @@ export function UsersTable({ users, viewerRole, viewerId }: { users: AdminUserRo
     setLoadingId(userId)
     await fetch(`/api/admin/users/${userId}/toggle-deactivate`, { method: 'POST' })
     setLoadingId(null)
+    router.refresh()
+  }
+
+  async function deleteUser(userId: string, email: string) {
+    if (!confirm(`Изтриваш ЗАВИНАГИ акаунта на ${email} — профил, магазин, обяви, поръчки, съобщения. Това е необратимо. Продължи ли?`)) return
+    if (!confirm('Последно потвърждение — наистина ли искаш да изтриеш този акаунт необратимо?')) return
+    setLoadingId(userId)
+    const res = await fetch(`/api/admin/users/${userId}/delete`, { method: 'POST' })
+    setLoadingId(null)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert(data.error ?? 'Грешка при изтриване на акаунта.')
+      return
+    }
     router.refresh()
   }
 
@@ -99,18 +113,31 @@ export function UsersTable({ users, viewerRole, viewerId }: { users: AdminUserRo
                 </td>
                 <td className="px-4 py-3">
                   {u.id !== viewerId && (
-                    <button
-                      onClick={() => toggleDeactivate(u.id)}
-                      disabled={loadingId === u.id}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                      style={{
-                        background: u.is_deactivated ? 'rgba(34,197,94,0.1)' : 'rgba(234,179,8,0.1)',
-                        color: u.is_deactivated ? '#22c55e' : '#eab308',
-                        border: 'none', cursor: 'pointer',
-                      }}
-                    >
-                      {u.is_deactivated ? 'Активирай' : 'Деактивирай'}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleDeactivate(u.id)}
+                        disabled={loadingId === u.id}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        style={{
+                          background: u.is_deactivated ? 'rgba(34,197,94,0.1)' : 'rgba(234,179,8,0.1)',
+                          color: u.is_deactivated ? '#22c55e' : '#eab308',
+                          border: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        {u.is_deactivated ? 'Активирай' : 'Деактивирай'}
+                      </button>
+                      {isSuperAdmin && (
+                        <button
+                          onClick={() => deleteUser(u.id, u.email)}
+                          disabled={loadingId === u.id}
+                          title="Изтрий завинаги"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'none', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
