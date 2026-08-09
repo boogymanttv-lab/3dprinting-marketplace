@@ -8,7 +8,7 @@ interface OtpInputProps {
   length?: number
 }
 
-export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
+export function OtpInput({ value, onChange, length = 8 }: OtpInputProps) {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
 
   function handleChange(i: number, digit: string) {
@@ -36,7 +36,7 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
   }
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 sm:gap-2 justify-center">
       {Array.from({ length }).map((_, i) => (
         <input
           key={i}
@@ -49,7 +49,7 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
           onChange={e => handleChange(i, e.target.value)}
           onKeyDown={e => handleKeyDown(i, e)}
           onPaste={handlePaste}
-          className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-xl outline-none transition-colors"
+          className="w-9 h-11 sm:w-10 sm:h-12 text-center text-lg sm:text-xl font-black rounded-xl outline-none transition-colors"
           style={{ background: 'var(--bg2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}
           onFocus={e => e.target.style.borderColor = 'var(--accent)'}
           onBlur={e => e.target.style.borderColor = 'var(--border)'}

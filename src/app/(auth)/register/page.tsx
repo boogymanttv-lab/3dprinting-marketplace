@@ -180,8 +180,8 @@ function VerifyStep({ email, onBack }: { email: string; onBack: () => void }) {
     e.preventDefault()
     setError('')
 
-    if (code.length !== 6) {
-      setError('Въведи всичките 6 цифри от кода.')
+    if (code.length !== 8) {
+      setError('Въведи всичките 8 цифри от кода.')
       return
     }
 
@@ -221,11 +221,11 @@ function VerifyStep({ email, onBack }: { email: string; onBack: () => void }) {
   return (
     <div className="rounded-2xl border p-8 space-y-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
       <p className="text-sm text-center" style={{ color: 'var(--muted)' }}>
-        Изпратихме 6-цифрен код на <strong style={{ color: 'var(--text)' }}>{email}</strong>. Въведи го по-долу, за да активираш акаунта си.
+        Изпратихме 8-цифрен код на <strong style={{ color: 'var(--text)' }}>{email}</strong>. Въведи го по-долу, за да активираш акаунта си.
       </p>
 
       <form onSubmit={handleVerify} className="space-y-4">
-        <OtpInput value={code} onChange={setCode} />
+        <OtpInput value={code} onChange={setCode} length={8} />
 
         {error && (
           <div className="rounded-lg px-4 py-3 text-sm text-center"
@@ -242,12 +242,12 @@ function VerifyStep({ email, onBack }: { email: string; onBack: () => void }) {
 
         <button
           type="submit"
-          disabled={loading || code.length !== 6}
+          disabled={loading || code.length !== 8}
           className="w-full py-3 rounded-lg text-sm font-bold transition-opacity"
           style={{
             background: 'var(--accent)', color: '#fff',
-            opacity: (loading || code.length !== 6) ? 0.5 : 1,
-            cursor: (loading || code.length !== 6) ? 'not-allowed' : 'pointer',
+            opacity: (loading || code.length !== 8) ? 0.5 : 1,
+            cursor: (loading || code.length !== 8) ? 'not-allowed' : 'pointer',
           }}
         >
           {loading ? 'Проверка...' : '✓ Активирай'}
