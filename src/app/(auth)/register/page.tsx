@@ -4,13 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Turnstile } from '@/components/Turnstile'
 
 export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({ full_name: '', email: '', password: '', confirm: '' })
   const [agreed, setAgreed] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const captchaRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -31,13 +35,20 @@ export default function RegisterPage() {
       setError('Трябва да се съгласиш с Общите условия и Политиката за поверителност.')
       return
     }
+    if (captchaRequired && !captchaToken) {
+      setError('Моля, потвърди, че не си робот.')
+      return
+    }
 
     setLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { full_name: form.full_name } },
+      options: {
+        data: { full_name: form.full_name },
+        captchaToken: captchaToken ?? undefined,
+      },
     })
 
     if (error) {
@@ -122,11 +133,17 @@ export default function RegisterPage() {
             </span>
           </label>
 
+          <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
+
           <button
             type="submit"
-            disabled={loading || !agreed}
+            disabled={loading || !agreed || (captchaRequired && !captchaToken)}
             className="w-full py-3 rounded-lg text-sm font-bold transition-opacity"
-            style={{ background: 'var(--accent)', color: '#fff', opacity: (loading || !agreed) ? 0.5 : 1, cursor: (loading || !agreed) ? 'not-allowed' : 'pointer' }}
+            style={{
+              background: 'var(--accent)', color: '#fff',
+              opacity: (loading || !agreed || (captchaRequired && !captchaToken)) ? 0.5 : 1,
+              cursor: (loading || !agreed || (captchaRequired && !captchaToken)) ? 'not-allowed' : 'pointer',
+            }}
           >
             {loading ? 'Регистрация...' : 'Създай акаунт'}
           </button>

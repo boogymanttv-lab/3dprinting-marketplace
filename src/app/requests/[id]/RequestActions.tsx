@@ -37,7 +37,7 @@ export function OfferForm({ requestId, shopId, currency }: OfferFormProps) {
     })
 
     if (insertError) {
-      setError('Грешка при изпращане на офертата. Опитай отново.')
+      setError(insertError.message?.includes('лимит') ? insertError.message : 'Грешка при изпращане на офертата. Опитай отново.')
       setLoading(false)
       return
     }

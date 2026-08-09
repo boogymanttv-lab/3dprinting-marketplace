@@ -102,7 +102,7 @@ export default function NewRequestPage() {
       .single()
 
     if (insertError || !request) {
-      setError('Грешка при публикуване. Опитай отново.')
+      setError(insertError?.message?.includes('лимит') ? insertError.message : 'Грешка при публикуване. Опитай отново.')
       setLoading(false)
       return
     }
