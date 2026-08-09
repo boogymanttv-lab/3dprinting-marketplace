@@ -106,6 +106,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                     : formatPrice(request.budget_min ?? request.budget_max, request.currency)}
                 </span>
               )}
+              {request.quantity && <span>🔢 {request.quantity} бр.</span>}
               {request.city && <span className="flex items-center gap-1"><MapPin size={12} /> {request.city}</span>}
               {request.deadline && <span className="flex items-center gap-1"><Clock size={12} /> до {formatDate(request.deadline)}</span>}
               <span>{formatRelativeTime(request.created_at)}</span>

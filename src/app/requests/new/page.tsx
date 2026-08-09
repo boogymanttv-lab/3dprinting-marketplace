@@ -26,6 +26,7 @@ export default function NewRequestPage() {
     category_id: '',
     budget_min: '',
     budget_max: '',
+    quantity: '',
     city: '',
     deadline: '',
   })
@@ -92,6 +93,7 @@ export default function NewRequestPage() {
         category_id: form.category_id || null,
         budget_min: form.budget_min ? parseFloat(form.budget_min) : null,
         budget_max: form.budget_max ? parseFloat(form.budget_max) : null,
+        quantity: form.quantity ? parseInt(form.quantity) : null,
         city: form.city.trim() || null,
         deadline: form.deadline || null,
         image_url: imageUrl,
@@ -213,6 +215,17 @@ export default function NewRequestPage() {
                 onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm block mb-1.5" style={{ color: 'var(--muted)' }}>Количество (по избор)</label>
+            <input type="number" min="1" step="1"
+              className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none" style={inputStyle}
+              value={form.quantity} onChange={update('quantity')} placeholder="напр. 5 бр."
+              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
+            />
+            <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>Остави празно, ако не е важно за офертата.</p>
           </div>
         </div>
 

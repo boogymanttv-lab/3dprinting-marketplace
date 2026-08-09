@@ -156,6 +156,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
                         : formatPrice(r.budget_min ?? r.budget_max, r.currency)}
                     </span>
                   )}
+                  {r.quantity && <span>🔢 {r.quantity} бр.</span>}
                   {r.city && <span className="flex items-center gap-1"><MapPin size={12} /> {r.city}</span>}
                   {r.deadline && <span className="flex items-center gap-1"><Clock size={12} /> до {formatDate(r.deadline)}</span>}
                   <span className="ml-auto font-semibold" style={{ color: r.offer_count > 0 ? 'var(--accent)' : 'var(--muted)' }}>

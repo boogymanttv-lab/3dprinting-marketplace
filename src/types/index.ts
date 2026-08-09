@@ -151,6 +151,7 @@ export interface PrintRequest {
   budget_min: number | null
   budget_max: number | null
   currency: string
+  quantity: number | null
   city: string | null
   deadline: string | null
   status: RequestStatus

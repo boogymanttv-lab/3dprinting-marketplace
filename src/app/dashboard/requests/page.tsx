@@ -114,6 +114,7 @@ export default async function DashboardRequestsPage({ searchParams }: Props) {
                         : formatPrice(r.budget_min ?? r.budget_max, r.currency)}
                     </span>
                   )}
+                  {r.quantity && <span>🔢 {r.quantity} бр.</span>}
                   <span className="ml-auto">{r.offer_count} {r.offer_count === 1 ? 'оферта' : 'оферти'} · {formatRelativeTime(r.created_at)}</span>
                 </div>
               </Link>
