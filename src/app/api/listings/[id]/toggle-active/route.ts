@@ -37,7 +37,7 @@ export async function POST(
     .eq('id', id)
     .eq('shop_id', shop.id)
 
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
   const referer = req.headers.get('referer') || `${base}/dashboard/listings`
   return NextResponse.redirect(new URL(referer, base), { status: 303 })
 }

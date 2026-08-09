@@ -3,7 +3,7 @@
 // Docs: https://resend.com/docs
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? '3DPrintingBG'
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  ?? 'https://3dprintingbg.com'
+const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  ?? 'https://www.3dprintingbg.com'
 const FROM     = `${APP_NAME} <noreply@3dprintingbg.com>`
 
 // Lazy-load Resend so the app works even without the package installed yet

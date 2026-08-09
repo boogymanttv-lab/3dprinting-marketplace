@@ -10,7 +10,7 @@ export async function POST(
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'))
+  if (!user) return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'))
 
   // Verify ownership
   const { data: shop } = await supabase
@@ -19,7 +19,7 @@ export async function POST(
     .eq('owner_id', user.id)
     .maybeSingle()
 
-  if (!shop) return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'))
+  if (!shop) return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'))
 
   // Hard delete — FK is SET NULL so orders are preserved without the listing reference
   const admin = createAdminClient()
@@ -30,7 +30,7 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3dprintingbg.com'
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.3dprintingbg.com'
   const referer = _req.headers.get('referer') || `${base}/dashboard/listings`
   return NextResponse.redirect(new URL(referer, base), { status: 303 })
 }
