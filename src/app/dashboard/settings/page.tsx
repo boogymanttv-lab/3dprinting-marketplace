@@ -67,6 +67,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({ full_name: '', phone: '', city: '', email: '' })
   const [shop, setShop] = useState({ name: '', description: '', city: '', phone: '' })
   const [shopSlug, setShopSlug] = useState('')
+  const [urlCopied, setUrlCopied] = useState(false)
   const [company, setCompany] = useState({ company_name: '', eik: '', vat_number: '', company_address: '' })
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' })
   const [shopId, setShopId] = useState<string | null>(null)
@@ -523,14 +524,21 @@ export default function SettingsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     const url = `${window.location.origin}/stores/${shopSlug}`
-                    navigator.clipboard.writeText(url)
+                    await navigator.clipboard.writeText(url)
+                    setUrlCopied(true)
+                    setTimeout(() => setUrlCopied(false), 2000)
                   }}
-                  className="px-3 py-2.5 rounded-lg text-xs font-semibold flex-shrink-0"
-                  style={{ background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--muted)', cursor: 'pointer' }}
+                  className="px-3 py-2.5 rounded-lg text-xs font-semibold flex-shrink-0 transition-colors"
+                  style={{
+                    background: 'var(--bg3)',
+                    border: `1px solid ${urlCopied ? 'var(--green)' : 'var(--border)'}`,
+                    color: urlCopied ? 'var(--green)' : 'var(--muted)',
+                    cursor: 'pointer',
+                  }}
                 >
-                  📋 Копирай
+                  {urlCopied ? '✓ Копирано!' : '📋 Копирай'}
                 </button>
               </div>
               <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
