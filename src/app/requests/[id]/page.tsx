@@ -90,7 +90,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         <div className="flex flex-col sm:flex-row gap-5">
           {request.image_url && (
             <div className="relative w-full sm:w-40 aspect-square rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'var(--bg3)' }}>
-              <Image src={request.image_url} alt={request.title} fill className="object-cover" unoptimized />
+              <Image src={request.image_url} alt={request.title} fill className="object-cover" />
             </div>
           )}
           <div className="flex-1 min-w-0">
