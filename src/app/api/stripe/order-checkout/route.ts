@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   const deliveryType = body.deliveryType as 'office' | 'address' | 'in_person' | undefined
   const courier = body.courier as string | undefined
   const address = body.address as string | undefined
+  const phone = body.phone as string | undefined
   const needsInvoice = !!body.needsInvoice
 
   if (!listingId || !deliveryType) {
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
   }
   if (deliveryType !== 'in_person' && !address?.trim()) {
     return NextResponse.json({ error: 'Missing address' }, { status: 400 })
+  }
+  if (!phone?.trim()) {
+    return NextResponse.json({ error: 'Missing phone' }, { status: 400 })
   }
 
   const admin = createAdminClient()
@@ -101,6 +105,7 @@ export async function POST(request: Request) {
         delivery_type: deliveryType,
         courier: trim(courier),
         address: trim(address),
+        phone: trim(phone),
         needs_invoice: needsInvoice ? 'true' : 'false',
       },
     })

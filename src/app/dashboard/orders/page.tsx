@@ -130,6 +130,9 @@ export default async function OrdersPage({ searchParams }: Props) {
 
                     <div className="text-xs space-y-0.5" style={{ color: 'var(--muted)' }}>
                       <p>👤 {order.buyer?.full_name ?? 'Клиент'} · {order.buyer?.email}</p>
+                      {order.buyer_phone && (
+                        <p className="font-semibold" style={{ color: 'var(--text)' }}>📞 {order.buyer_phone}</p>
+                      )}
                       <p>🛒 {order.quantity} бр. · {formatDate(order.created_at)}</p>
                       {shipping?.courier && (
                         <p>🚚 {shipping.courier === 'econt' ? 'Еконт' : shipping.courier === 'speedy' ? 'Speedy' : 'Pigeon'} · {shipping.delivery_type === 'office' ? 'До офис' : 'До адрес'} · {shipping.address}</p>

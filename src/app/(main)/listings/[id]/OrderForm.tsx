@@ -49,6 +49,7 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
   const [payment, setPayment] = useState<PaymentMethod>('cod')
   const [courier, setCourier] = useState<Courier>('econt')
   const [address, setAddress] = useState('')
+  const [phone, setPhone] = useState('')
   const [needsInvoice, setNeedsInvoice] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -82,6 +83,12 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
       return
     }
 
+    if (phone.trim().replace(/[\s()-]/g, '').length < 6) {
+      setError('Моля въведи валиден телефон за връзка.')
+      setLoading(false)
+      return
+    }
+
     if (payment === 'card') {
       try {
         const res = await fetch('/api/stripe/order-checkout', {
@@ -93,6 +100,7 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
             deliveryType,
             courier: needsCourier ? courier : undefined,
             address: needsCourier ? address : undefined,
+            phone: phone.trim(),
             needsInvoice,
           }),
         })
@@ -109,24 +117,34 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
       return
     }
 
-    const { error: orderError } = await supabase.from('orders').insert({
-      listing_id: listing.id,
-      shop_id: listing.shop_id,
-      buyer_id: user.id,
-      listing_title: listing.title,
-      listing_price: listing.price,
-      listing_image: listing.images?.[0] ?? null,
-      quantity: qty,
-      total_amount: total,
-      payment_method: payment,
-      shipping_address: needsCourier
-        ? { courier, delivery_type: deliveryType, address }
-        : { delivery_type: 'in_person' },
-      needs_invoice: needsInvoice,
-      status: 'new',
-    })
-
-    if (orderError) {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listing_id: listing.id,
+          shop_id: listing.shop_id,
+          listing_title: listing.title,
+          listing_price: listing.price,
+          listing_image: listing.images?.[0] ?? null,
+          quantity: qty,
+          total_amount: total,
+          payment_method: payment,
+          buyer_phone: phone.trim(),
+          shipping_address: needsCourier
+            ? { courier, delivery_type: deliveryType, address }
+            : { delivery_type: 'in_person' },
+          needs_invoice: needsInvoice,
+          status: 'new',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Грешка при поръчката. Опитай отново.')
+        setLoading(false)
+        return
+      }
+    } catch {
       setError('Грешка при поръчката. Опитай отново.')
       setLoading(false)
       return
@@ -158,6 +176,21 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
         {qty > 1 && (
           <span className="text-xs" style={{ color: 'var(--muted)' }}>= {formatPrice(total, listing.currency)}</span>
         )}
+      </div>
+
+      {/* Phone — required so the seller/courier can reach the buyer */}
+      <div>
+        <label className="text-sm block mb-2" style={{ color: 'var(--muted)' }}>Телефон за връзка *</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          placeholder="напр. 0888 123 456"
+          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none"
+          style={inputStyle}
+          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+          onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        />
       </div>
 
       {/* Delivery section */}

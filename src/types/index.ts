@@ -225,6 +225,7 @@ export interface Order {
   quantity: number
   total_amount: number
   payment_method: PaymentMethod
+  buyer_phone: string | null
   stripe_payment_intent_id: string | null
   platform_fee: number | null
   seller_amount: number | null

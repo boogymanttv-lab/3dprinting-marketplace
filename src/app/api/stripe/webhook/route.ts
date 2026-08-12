@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { slugify } from '@/lib/utils'
+import { sendOrderConfirmation } from '@/lib/email'
 import type Stripe from 'stripe'
 
 export async function POST(request: Request) {
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
           const platformFee = Math.round(totalAmount * 0.10 * 100) / 100
           const sellerAmount = Math.round((totalAmount - platformFee) * 100) / 100
 
-          await admin.from('orders').insert({
+          const { data: newOrder } = await admin.from('orders').insert({
             listing_id: meta.listing_id,
             shop_id: meta.shop_id,
             buyer_id: meta.buyer_id,
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
             quantity,
             total_amount: totalAmount,
             payment_method: 'card',
+            buyer_phone: meta.phone || null,
             stripe_payment_intent_id: paymentIntentId,
             platform_fee: platformFee,
             seller_amount: sellerAmount,
@@ -84,7 +86,29 @@ export async function POST(request: Request) {
               : { courier: meta.courier || null, delivery_type: meta.delivery_type || null, address: meta.address || '' },
             needs_invoice: meta.needs_invoice === 'true',
             status: 'new',
-          })
+          }).select().single()
+
+          if (newOrder) {
+            const [{ data: buyer }, { data: shop2 }] = await Promise.all([
+              admin.from('profiles').select('full_name, email').eq('id', meta.buyer_id).single(),
+              admin.from('shops').select('name, owner:profiles(email, full_name)').eq('id', meta.shop_id).single(),
+            ])
+            const sellerEmail = (shop2?.owner as { email?: string } | null)?.email
+            if (buyer?.email && sellerEmail) {
+              try {
+                await sendOrderConfirmation(buyer.email, sellerEmail, {
+                  buyerName: buyer.full_name ?? 'Клиент',
+                  shopName: shop2?.name ?? '',
+                  listingTitle: meta.listing_title || '',
+                  quantity,
+                  total: totalAmount,
+                  orderId: newOrder.id,
+                })
+              } catch {
+                // Email failure shouldn't break order processing
+              }
+            }
+          }
           break
         }
 

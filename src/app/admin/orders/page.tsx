@@ -100,6 +100,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="font-medium">{o.buyer?.full_name ?? '—'}</div>
                         <div className="text-xs" style={{ color: 'var(--muted)' }}>{o.buyer?.email}</div>
+                        {o.buyer_phone && (
+                          <div className="text-xs" style={{ color: 'var(--muted)' }}>📞 {o.buyer_phone}</div>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {o.shop ? (
