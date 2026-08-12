@@ -4,6 +4,7 @@ import { getCurrentUserAndRole, hasMinRole } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, PAYMENT_METHOD_LABELS, type OrderStatus, type PaymentMethod } from '@/types'
+import { AdminOrderActions } from './AdminOrderActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   const { user, role } = await getCurrentUserAndRole()
   if (!user) redirect('/login?redirectTo=/admin/orders')
   if (!hasMinRole(role, 'operator')) redirect('/admin')
+  const isSuperAdmin = hasMinRole(role, 'super_admin')
 
   const admin = createAdminClient()
 
@@ -83,7 +85,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Обява', 'Купувач', 'Магазин', 'Сума', 'Плащане', 'Статус', 'Дата'].map(h => (
+                  {['Обява', 'Купувач', 'Магазин', 'Сума', 'Плащане', 'Статус', 'Дата', 'Действия'].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ color: 'var(--muted)' }}>{h}</th>
                   ))}
                 </tr>
@@ -125,6 +127,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--muted)' }}>
                         {formatDate(o.created_at)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <AdminOrderActions orderId={o.id} status={o.status as OrderStatus} canDelete={isSuperAdmin} />
                       </td>
                     </tr>
                   )
