@@ -159,6 +159,13 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
     color: 'var(--text)',
   }
 
+  // Highlighted style for required fields that are easy to miss (address, phone)
+  const requiredInputStyle = {
+    background: 'rgba(249,115,22,0.06)',
+    border: '1.5px solid var(--accent)',
+    color: 'var(--text)',
+  }
+
   return (
     <div className="space-y-4">
       {/* Quantity */}
@@ -176,21 +183,6 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
         {qty > 1 && (
           <span className="text-xs" style={{ color: 'var(--muted)' }}>= {formatPrice(total, listing.currency)}</span>
         )}
-      </div>
-
-      {/* Phone — required so the seller/courier can reach the buyer */}
-      <div>
-        <label className="text-sm block mb-2" style={{ color: 'var(--muted)' }}>Телефон за връзка *</label>
-        <input
-          type="tel"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          placeholder="напр. 0888 123 456"
-          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none"
-          style={inputStyle}
-          onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
-        />
       </div>
 
       {/* Delivery section */}
@@ -233,18 +225,23 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
               </div>
             </div>
 
-            <input
-              type="text"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              placeholder={deliveryType === 'office'
-                ? `Офис на ${COURIERS.find(c => c.key === courier)?.label} — напр. „Ленин 5, София"`
-                : 'ул. Витоша 12, ет. 3, София 1000'}
-              className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none"
-              style={inputStyle}
-              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border)'}
-            />
+            <div>
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--accent)' }}>
+                {deliveryType === 'office' ? '🏢 Офис за доставка *' : '🏠 Адрес за доставка *'}
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder={deliveryType === 'office'
+                  ? `Офис на ${COURIERS.find(c => c.key === courier)?.label} — напр. „Ленин 5, София"`
+                  : 'ул. Витоша 12, ет. 3, София 1000'}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none"
+                style={requiredInputStyle}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.target.style.borderColor = 'var(--accent)'}
+              />
+            </div>
           </>
         )}
 
@@ -253,6 +250,21 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
             🤝 Ще се договорите с продавача за място и час на предаване чрез съобщения.
           </p>
         )}
+
+        {/* Phone — required so the seller/courier can reach the buyer */}
+        <div>
+          <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--accent)' }}>📞 Телефон за връзка *</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="напр. 0888 123 456"
+            className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none"
+            style={requiredInputStyle}
+            onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+            onBlur={e => e.target.style.borderColor = 'var(--accent)'}
+          />
+        </div>
       </div>
 
       {/* Payment — options depend on delivery type */}
