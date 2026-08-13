@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         application_fee_amount: applicationFeeAmount,
         transfer_data: { destination: shop.stripe_connect_account_id },
       },
-      success_url: `${base}/dashboard/orders?success=1&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${base}/dashboard/my-orders?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/listings/${listingId}?order_cancelled=1`,
       metadata: {
         mode: 'order_payment',

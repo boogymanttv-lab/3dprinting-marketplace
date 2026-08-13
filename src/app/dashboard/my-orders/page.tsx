@@ -20,7 +20,10 @@ const COURIER_LABELS: Record<string, string> = {
   pigeon: 'Pigeon Express',
 }
 
-export default async function MyOrdersPage() {
+interface Props { searchParams: Promise<{ success?: string }> }
+
+export default async function MyOrdersPage({ searchParams }: Props) {
+  const { success } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?redirectTo=/dashboard/my-orders')
@@ -220,6 +223,13 @@ export default async function MyOrdersPage() {
           </p>
         </div>
       </div>
+
+      {success === '1' && (
+        <div className="rounded-xl p-4 mb-6 text-sm font-semibold"
+          style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>
+          ✅ Поръчката е направена успешно! Продавачът е известен и скоро ще я обработи.
+        </div>
+      )}
 
       {orders?.length === 0 ? (
         <div className="rounded-2xl border p-16 text-center"

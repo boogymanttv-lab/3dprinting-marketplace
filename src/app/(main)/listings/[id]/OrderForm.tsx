@@ -150,7 +150,7 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
       return
     }
 
-    router.push('/dashboard/orders?success=1')
+    router.push('/dashboard/my-orders?success=1')
   }
 
   const inputStyle = {
