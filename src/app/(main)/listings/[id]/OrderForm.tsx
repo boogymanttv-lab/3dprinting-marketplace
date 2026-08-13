@@ -205,11 +205,11 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled, shopName }: Or
         <button
           type="button"
           onClick={handleAddToCart}
-          className="ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          className="ml-auto flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg transition-colors"
           style={{
-            background: addedToCart ? 'rgba(34,197,94,0.12)' : 'var(--bg3)',
-            border: `1px solid ${addedToCart ? 'var(--green)' : 'var(--border)'}`,
-            color: addedToCart ? 'var(--green)' : 'var(--text)',
+            background: addedToCart ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.1)',
+            border: `1.5px solid ${addedToCart ? 'var(--green)' : 'var(--accent)'}`,
+            color: addedToCart ? 'var(--green)' : 'var(--accent)',
           }}
         >
           <ShoppingCart size={13} />
