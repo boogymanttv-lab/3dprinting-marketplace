@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { CartButton } from '@/components/cart/CartButton'
 import type { User } from '@supabase/supabase-js'
 import {
   Home, Store, MessageCircle, User as UserIcon,
@@ -143,6 +144,7 @@ export function Navbar() {
 
           {/* Right */}
           <div className="flex items-center gap-2">
+            <CartButton />
             {user ? (
               <>
                 {/* New listing button — only if has shop */}

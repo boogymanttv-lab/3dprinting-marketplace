@@ -283,6 +283,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               listing={l as Listing}
               shopHasInvoice={!!l.shop?.eik}
               cardEnabled={!!l.shop?.stripe_connect_charges_enabled}
+              shopName={l.shop?.name ?? ''}
             />
 
             {/* Share */}

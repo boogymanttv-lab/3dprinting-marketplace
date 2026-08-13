@@ -4,12 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/utils'
+import { addToCart } from '@/lib/cart'
+import { ShoppingCart } from 'lucide-react'
 import type { Listing } from '@/types'
 
 interface OrderFormProps {
   listing: Listing
   shopHasInvoice: boolean
   cardEnabled: boolean
+  shopName: string
 }
 
 type PaymentMethod = 'card' | 'cod' | 'in_person'
@@ -41,10 +44,11 @@ function allowedPayments(cardEnabled: boolean): Record<DeliveryType, { key: Paym
   }
 }
 
-export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormProps) {
+export function OrderForm({ listing, shopHasInvoice, cardEnabled, shopName }: OrderFormProps) {
   const ALLOWED_PAYMENTS = allowedPayments(cardEnabled)
   const router = useRouter()
   const [qty, setQty] = useState(1)
+  const [addedToCart, setAddedToCart] = useState(false)
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('office')
   const [payment, setPayment] = useState<PaymentMethod>('cod')
   const [courier, setCourier] = useState<Courier>('econt')
@@ -153,6 +157,21 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
     router.push('/dashboard/my-orders?success=1')
   }
 
+  function handleAddToCart() {
+    addToCart({
+      listingId: listing.id,
+      title: listing.title,
+      price: listing.price,
+      currency: listing.currency,
+      image: listing.images?.[0] ?? null,
+      shopId: listing.shop_id,
+      shopName,
+      maxQty: listing.quantity,
+    }, qty)
+    setAddedToCart(true)
+    setTimeout(() => setAddedToCart(false), 2000)
+  }
+
   const inputStyle = {
     background: 'var(--bg2)',
     border: '1px solid var(--border)',
@@ -183,6 +202,19 @@ export function OrderForm({ listing, shopHasInvoice, cardEnabled }: OrderFormPro
         {qty > 1 && (
           <span className="text-xs" style={{ color: 'var(--muted)' }}>= {formatPrice(total, listing.currency)}</span>
         )}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          style={{
+            background: addedToCart ? 'rgba(34,197,94,0.12)' : 'var(--bg3)',
+            border: `1px solid ${addedToCart ? 'var(--green)' : 'var(--border)'}`,
+            color: addedToCart ? 'var(--green)' : 'var(--text)',
+          }}
+        >
+          <ShoppingCart size={13} />
+          {addedToCart ? '✓ Добавено!' : 'Добави в количката'}
+        </button>
       </div>
 
       {/* Delivery section */}
