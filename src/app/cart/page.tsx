@@ -119,40 +119,48 @@ export default function CartPage() {
       : { delivery_type: 'in_person' }
     const payment_method = deliveryType === 'in_person' ? 'in_person' : 'cod'
 
-    let failedCount = 0
-    for (const item of okItems) {
+    // Групираме по магазин — 1 поръчка с няколко артикула на магазин,
+    // вместо по 1 поръчка на артикул.
+    const groups = okItems.reduce<Record<string, typeof okItems>>((acc, item) => {
+      (acc[item.shopId] ??= []).push(item)
+      return acc
+    }, {})
+
+    let failedShops = 0
+    for (const [shopId, groupItems] of Object.entries(groups)) {
       try {
         const res = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            listing_id: item.listingId,
-            shop_id: item.shopId,
-            listing_title: item.title,
-            listing_price: item.price,
-            listing_image: item.image,
-            quantity: item.qty,
-            total_amount: item.price * item.qty,
+            shop_id: shopId,
+            items: groupItems.map(i => ({
+              listing_id: i.listingId,
+              title: i.title,
+              price: i.price,
+              image: i.image,
+              quantity: i.qty,
+            })),
             payment_method,
             buyer_phone: phone.trim(),
             shipping_address,
             needs_invoice: false,
-            status: 'new',
           }),
         })
-        if (!res.ok) failedCount++
+        if (!res.ok) failedShops++
       } catch {
-        failedCount++
+        failedShops++
       }
     }
 
     setLoading(false)
 
-    if (failedCount === 0) {
+    const totalShops = Object.keys(groups).length
+    if (failedShops === 0) {
       clearCart()
       router.push('/dashboard/my-orders?success=1')
-    } else if (failedCount < okItems.length) {
-      setError(`${failedCount} от поръчките не се записаха. Опитай отново с останалите артикули.`)
+    } else if (failedShops < totalShops) {
+      setError(`Поръчката към ${failedShops} магазин(а) не се запази. Опитай отново с останалите артикули.`)
       refresh()
     } else {
       setError('Възникна грешка при поръчката. Опитай отново.')

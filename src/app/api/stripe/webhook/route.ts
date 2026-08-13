@@ -89,6 +89,15 @@ export async function POST(request: Request) {
           }).select().single()
 
           if (newOrder) {
+            await admin.from('order_items').insert({
+              order_id: newOrder.id,
+              listing_id: meta.listing_id,
+              listing_title: meta.listing_title || '',
+              listing_price: listingPrice,
+              listing_image: meta.listing_image || null,
+              quantity,
+            })
+
             const [{ data: buyer }, { data: shop2 }] = await Promise.all([
               admin.from('profiles').select('full_name, email').eq('id', meta.buyer_id).single(),
               admin.from('shops').select('name, owner:profiles(email, full_name)').eq('id', meta.shop_id).single(),
@@ -100,7 +109,7 @@ export async function POST(request: Request) {
                   buyerName: buyer.full_name ?? 'Клиент',
                   shopName: shop2?.name ?? '',
                   listingTitle: meta.listing_title || '',
-                  quantity,
+                  items: [{ title: meta.listing_title || '', quantity, price: listingPrice }],
                   total: totalAmount,
                   orderId: newOrder.id,
                 })

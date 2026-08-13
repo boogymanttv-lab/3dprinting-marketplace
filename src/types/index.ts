@@ -214,6 +214,17 @@ export interface Address {
 export type OrderStatus = 'new' | 'accepted' | 'processing' | 'shipped' | 'completed' | 'cancelled'
 export type PaymentMethod = 'card' | 'cod' | 'in_person'
 
+export interface OrderItem {
+  id: string
+  order_id: string
+  listing_id: string | null
+  listing_title: string
+  listing_price: number
+  listing_image: string | null
+  quantity: number
+  created_at: string
+}
+
 export interface Order {
   id: string
   listing_id: string
@@ -241,6 +252,7 @@ export interface Order {
   listing?: Listing
   shop?: Shop
   buyer?: Profile
+  items?: OrderItem[]
 }
 
 // ── Messages ──────────────────────────────────────

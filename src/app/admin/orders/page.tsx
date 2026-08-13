@@ -31,7 +31,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
 
   let query = admin
     .from('orders')
-    .select('*, shop:shops(id, name, slug), buyer:profiles(full_name, email)')
+    .select('*, shop:shops(id, name, slug), buyer:profiles(full_name, email), items:order_items(*)')
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -93,11 +93,23 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
               <tbody>
                 {orders.map(o => {
                   const statusStyle = ORDER_STATUS_COLORS[o.status as OrderStatus]
+                  const items = (o.items ?? []) as { id: string; listing_title: string; quantity: number }[]
                   return (
                     <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td className="px-4 py-3 max-w-[220px]">
-                        <div className="font-semibold truncate">{o.listing_title}</div>
-                        <div className="text-xs" style={{ color: 'var(--muted)' }}>× {o.quantity}</div>
+                        {items.length > 1 ? (
+                          <>
+                            <div className="font-semibold">{items.length} артикула</div>
+                            <div className="text-xs truncate" style={{ color: 'var(--muted)' }}>
+                              {items.map(i => `${i.listing_title} ×${i.quantity}`).join(', ')}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-semibold truncate">{o.listing_title}</div>
+                            <div className="text-xs" style={{ color: 'var(--muted)' }}>× {o.quantity}</div>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="font-medium">{o.buyer?.full_name ?? '—'}</div>

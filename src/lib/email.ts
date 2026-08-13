@@ -18,16 +18,30 @@ async function getResend() {
 
 // ─── Templates ───────────────────────────────────────
 
+export interface OrderEmailItem { title: string; quantity: number; price: number }
+
+function itemsListHtml(items: OrderEmailItem[]) {
+  return items.map(i => `
+    <div style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #2a2a3a;">
+      <span style="flex: 1;">${i.title} <span style="color: #8884a0;">× ${i.quantity}</span></span>
+      <span style="font-weight: 700; white-space: nowrap;">€ ${(i.price * i.quantity).toFixed(2)}</span>
+    </div>
+  `).join('')
+}
+
 function orderConfirmationBuyer(data: {
   buyerName: string
   shopName: string
   listingTitle: string
-  quantity: number
+  items: OrderEmailItem[]
   total: number
   orderId: string
 }) {
+  const itemCount = data.items.reduce((s, i) => s + i.quantity, 0)
   return {
-    subject: `✅ Поръчката ти е получена — ${data.listingTitle}`,
+    subject: data.items.length > 1
+      ? `✅ Поръчката ти е получена — ${data.items.length} артикула от ${data.shopName}`
+      : `✅ Поръчката ти е получена — ${data.listingTitle}`,
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0f0f13; color: #f1f0f7; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 28px;">
@@ -37,13 +51,11 @@ function orderConfirmationBuyer(data: {
         <h2 style="font-size: 18px; margin-bottom: 8px;">Здравей, ${data.buyerName}!</h2>
         <p style="color: #8884a0; margin-bottom: 24px;">Поръчката ти беше получена успешно. Продавачът ще потвърди скоро.</p>
         <div style="background: #1a1a24; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #2a2a3a;">
-          <p style="font-size: 13px; color: #8884a0; margin: 0 0 8px;">ПРОДУКТ</p>
-          <p style="font-weight: 700; margin: 0 0 4px;">${data.listingTitle}</p>
-          <p style="color: #8884a0; font-size: 14px; margin: 0 0 12px;">Количество: ${data.quantity} бр.</p>
-          <p style="color: #8884a0; font-size: 13px; margin: 0 0 4px;">Магазин: ${data.shopName}</p>
+          <p style="font-size: 13px; color: #8884a0; margin: 0 0 8px;">${itemCount} АРТИКУЛА · Магазин: ${data.shopName}</p>
+          ${itemsListHtml(data.items)}
           <p style="font-size: 22px; font-weight: 900; color: #f97316; margin: 12px 0 0;">€ ${data.total.toFixed(2)}</p>
         </div>
-        <a href="${APP_URL}/dashboard/orders" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Виж поръчката</a>
+        <a href="${APP_URL}/dashboard/my-orders" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Виж поръчката</a>
         <p style="text-align: center; font-size: 12px; color: #8884a0; margin-top: 24px;">${APP_NAME} · Маркетплейс за 3D принтиране</p>
       </div>
     `,
@@ -54,25 +66,27 @@ function orderNotificationSeller(data: {
   shopName: string
   buyerName: string
   listingTitle: string
-  quantity: number
+  items: OrderEmailItem[]
   total: number
   orderId: string
 }) {
+  const itemCount = data.items.reduce((s, i) => s + i.quantity, 0)
   return {
-    subject: `🛒 Нова поръчка — ${data.listingTitle}`,
+    subject: data.items.length > 1
+      ? `🛒 Нова поръчка — ${data.items.length} артикула`
+      : `🛒 Нова поръчка — ${data.listingTitle}`,
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0f0f13; color: #f1f0f7; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 28px;">
           <div style="font-size: 36px;">🛒</div>
           <h1 style="font-size: 22px; font-weight: 900; margin: 8px 0; color: #f97316;">Нова поръчка!</h1>
         </div>
-        <p style="color: #8884a0; margin-bottom: 24px;">Здравей, <strong>${data.shopName}</strong>! Имаш нова поръчка от <strong>${data.buyerName}</strong>.</p>
+        <p style="color: #8884a0; margin-bottom: 24px;">Здравей, <strong>${data.shopName}</strong>! Имаш нова поръчка (${itemCount} бр.) от <strong>${data.buyerName}</strong>.</p>
         <div style="background: #1a1a24; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #2a2a3a;">
-          <p style="font-weight: 700; margin: 0 0 4px;">${data.listingTitle}</p>
-          <p style="color: #8884a0; font-size: 14px; margin: 0 0 12px;">Количество: ${data.quantity} бр.</p>
-          <p style="font-size: 22px; font-weight: 900; color: #f97316; margin: 0;">€ ${data.total.toFixed(2)}</p>
+          ${itemsListHtml(data.items)}
+          <p style="font-size: 22px; font-weight: 900; color: #f97316; margin: 12px 0 0;">€ ${data.total.toFixed(2)}</p>
         </div>
-        <a href="${APP_URL}/dashboard" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Отиди в Dashboard</a>
+        <a href="${APP_URL}/dashboard/orders" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Отиди в Dashboard</a>
       </div>
     `,
   }
@@ -143,7 +157,7 @@ export async function sendOrderConfirmation(
     buyerName: string
     shopName: string
     listingTitle: string
-    quantity: number
+    items: OrderEmailItem[]
     total: number
     orderId: string
   }

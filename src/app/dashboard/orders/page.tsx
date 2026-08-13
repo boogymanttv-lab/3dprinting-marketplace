@@ -36,7 +36,7 @@ export default async function OrdersPage({ searchParams }: Props) {
 
   let query = supabase
     .from('orders')
-    .select('*, buyer:profiles(full_name, email)')
+    .select('*, buyer:profiles(full_name, email), items:order_items(*)')
     .eq('shop_id', shop.id)
     .order('created_at', { ascending: false })
 
@@ -111,6 +111,7 @@ export default async function OrdersPage({ searchParams }: Props) {
           {orders.map(order => {
             const statusStyle = ORDER_STATUS_COLORS[order.status as OrderStatus]
             const shipping = order.shipping_address as Record<string, string> | null
+            const items = (order.items ?? []) as { id: string; listing_title: string; quantity: number; listing_price: number }[]
 
             return (
               <div key={order.id} className="rounded-2xl border p-5"
@@ -121,19 +122,29 @@ export default async function OrdersPage({ searchParams }: Props) {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="font-bold text-sm">{order.listing_title}</h3>
+                      <h3 className="font-bold text-sm">
+                        {items.length > 1 ? `${items.length} артикула` : order.listing_title}
+                      </h3>
                       <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold"
                         style={{ background: statusStyle.bg, color: statusStyle.text }}>
                         {ORDER_STATUS_LABELS[order.status as OrderStatus]}
                       </span>
                     </div>
 
+                    {items.length > 1 && (
+                      <ul className="text-xs mb-1.5 space-y-0.5" style={{ color: 'var(--muted)' }}>
+                        {items.map(i => (
+                          <li key={i.id}>• {i.listing_title} × {i.quantity} — {formatPrice(i.listing_price * i.quantity)}</li>
+                        ))}
+                      </ul>
+                    )}
+
                     <div className="text-xs space-y-0.5" style={{ color: 'var(--muted)' }}>
                       <p>👤 {order.buyer?.full_name ?? 'Клиент'} · {order.buyer?.email}</p>
                       {order.buyer_phone && (
                         <p className="font-semibold" style={{ color: 'var(--text)' }}>📞 {order.buyer_phone}</p>
                       )}
-                      <p>🛒 {order.quantity} бр. · {formatDate(order.created_at)}</p>
+                      <p>🛒 {order.quantity} бр. общо · {formatDate(order.created_at)}</p>
                       {shipping?.courier && (
                         <p>🚚 {shipping.courier === 'econt' ? 'Еконт' : shipping.courier === 'speedy' ? 'Speedy' : 'Pigeon'} · {shipping.delivery_type === 'office' ? 'До офис' : 'До адрес'} · {shipping.address}</p>
                       )}

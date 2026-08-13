@@ -30,7 +30,7 @@ export default async function MyOrdersPage({ searchParams }: Props) {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('*, shop:shops(id, name, slug, city)')
+    .select('*, shop:shops(id, name, slug, city), items:order_items(*)')
     .eq('buyer_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -91,7 +91,9 @@ export default async function MyOrdersPage({ searchParams }: Props) {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-sm mb-0.5 truncate">{order.listing_title}</h3>
+              <h3 className="font-bold text-sm mb-0.5 truncate">
+                {order.items && order.items.length > 1 ? `${order.items.length} артикула` : order.listing_title}
+              </h3>
               <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>
                 🏪 <Link href={`/stores/${order.shop?.slug}`}
                   style={{ color: 'var(--accent)', textDecoration: 'none' }}>
@@ -99,9 +101,17 @@ export default async function MyOrdersPage({ searchParams }: Props) {
                 </Link>
                 {order.shop?.city && ` · 📍 ${order.shop.city}`}
               </p>
-              <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                {order.quantity} бр. · {formatRelativeTime(order.created_at)}
-              </p>
+              {order.items && order.items.length > 1 ? (
+                <ul className="text-xs space-y-0.5" style={{ color: 'var(--muted)' }}>
+                  {order.items.map((i: { id: string; listing_title: string; quantity: number }) => (
+                    <li key={i.id}>• {i.listing_title} × {i.quantity}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                  {order.quantity} бр. · {formatRelativeTime(order.created_at)}
+                </p>
+              )}
             </div>
 
             {/* Price */}
