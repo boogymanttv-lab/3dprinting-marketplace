@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Supabase SQL миграции — само лична документация на схемата на базата,
+# не се четат от приложението по никакъв начин. Пазим ги локално, не
+# публично (разкриват пълната структура на таблиците, RLS политики и т.н.)
+/supabase/migrations
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
