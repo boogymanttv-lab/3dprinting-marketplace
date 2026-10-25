@@ -125,6 +125,8 @@ export interface Listing {
   is_active: boolean
   is_featured: boolean
   is_request_order?: boolean
+  promo_rank?: number
+  promo_until?: string | null
   view_count: number
   moderation_status: 'active' | 'flagged'
   moderation_note: string | null

@@ -66,6 +66,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
       .eq('shop.is_active', true)
       .eq('is_request_order', false)
       .ilike('city', `%${city.name}%`)
+      .order('promo_rank', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(48),
     supabase

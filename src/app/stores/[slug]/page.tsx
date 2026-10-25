@@ -69,6 +69,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     .eq('shop_id', shop.id)
     .eq('is_active', true)
     .eq('is_request_order', false)
+    .order('promo_rank', { ascending: false })
     .order('created_at', { ascending: false })
 
   const { data: reviews } = await supabase

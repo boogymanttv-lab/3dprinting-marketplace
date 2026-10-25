@@ -84,6 +84,7 @@ export default async function DashboardPage() {
             { href: '/dashboard/requests', icon: '📝', label: 'Заявки' },
             { href: '/messages', icon: '💬', label: 'Съобщения' },
             { href: '/dashboard/reviews', icon: '⭐', label: 'Ревюта' },
+            { href: '/dashboard/credits', icon: '💎', label: 'Кредити и промоции' },
             { href: '/plans', icon: '💳', label: 'Абонамент' },
             { href: '/dashboard/settings', icon: '⚙️', label: 'Настройки' },
           ].map(item => (

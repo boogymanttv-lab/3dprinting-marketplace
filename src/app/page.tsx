@@ -40,6 +40,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     .eq('is_active', true)
     .eq('shop.is_active', true)
     .eq('is_request_order', false)
+    .order('promo_rank', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to)
 

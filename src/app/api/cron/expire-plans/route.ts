@@ -30,5 +30,11 @@ export async function GET(request: Request) {
     await applyPlanLimitAndNotify(admin, s.id)
   }
 
+  // Резервно изтичане на промоции на обяви (основният начин е pg_cron всяка минута)
+  const nowIso = new Date().toISOString()
+  await admin.from('listings').update({ promo_rank: 0 }).gt('promo_rank', 0).lt('promo_until', nowIso)
+  await admin.from('service_orders').update({ status: 'done' })
+    .eq('status', 'active').lt('ends_at', nowIso)
+
   return NextResponse.json({ expired: expired?.length ?? 0 })
 }

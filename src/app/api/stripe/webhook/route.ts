@@ -31,7 +31,24 @@ export async function POST(request: Request) {
         const meta = session.metadata ?? {}
         const planId = meta.plan_id
         const interval = meta.interval
-        if (!planId) break
+
+        // Зареждане на кредити — идемпотентно по session.id
+        if (meta.mode === 'credits_topup') {
+          const credits = parseInt(meta.credits ?? '0', 10)
+          if (meta.user_id && credits > 0 && session.payment_status === 'paid') {
+            await admin.rpc('add_credits', {
+              p_user: meta.user_id,
+              p_amount: credits,
+              p_type: 'topup',
+              p_desc: `Зареждане на ${credits.toLocaleString('bg-BG')} кредита`,
+              p_session: session.id,
+            })
+          }
+          break
+        }
+
+        // ВАЖНО: поръчките с карта не носят plan_id — не бива да се прекъсват тук.
+        if (!planId && meta.mode !== 'order_payment') break
 
         const subscriptionId =
           typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null

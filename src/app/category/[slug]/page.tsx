@@ -124,6 +124,7 @@ export default async function CategoryPage({
     .eq('is_active', true)
     .eq('shop.is_active', true)
     .eq('is_request_order', false)
+    .order('promo_rank', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(48)
 
