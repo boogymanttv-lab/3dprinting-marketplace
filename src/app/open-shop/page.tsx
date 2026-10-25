@@ -29,19 +29,32 @@ function OpenShopForm() {
   const [shopSlug, setShopSlug] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Redirect if no plan selected, or if we're bouncing back from a cancelled Stripe checkout
+  // Промо (линк за регистрация с безплатен период) — отваря магазин без Stripe
+  const [promo, setPromo] = useState<{ planId: string; planName: string; days: number } | null>(null)
+  const [promoChecked, setPromoChecked] = useState(false)
+
   useEffect(() => {
-    if (!planId || cancelled) {
+    fetch('/api/promo/status')
+      .then(r => r.json())
+      .then(d => { if (d.promo) setPromo(d.promo) })
+      .catch(() => {})
+      .finally(() => setPromoChecked(true))
+  }, [])
+
+  // Redirect if no plan selected (и няма промо), or if we're bouncing back from a cancelled Stripe checkout
+  useEffect(() => {
+    if (!promoChecked) return
+    if ((!planId && !promo) || cancelled) {
       router.replace(cancelled ? '/plans?cancelled=1' : '/plans')
     }
-  }, [planId, cancelled])
+  }, [planId, cancelled, promo, promoChecked])
 
   // Cleanup timer on unmount
   useEffect(() => {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
 
-  if (!planId || cancelled) {
+  if (!promoChecked || (!planId && !promo) || cancelled) {
     return null
   }
 
@@ -66,6 +79,41 @@ function OpenShopForm() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) { router.push('/login?redirectTo=/open-shop'); return }
+
+    // Промо → магазинът се създава на сървъра с избрания план за X дни, без Stripe
+    if (promo) {
+      try {
+        const res = await fetch('/api/promo/open-shop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.error || 'Грешка при създаването.')
+          setLoading(false)
+          return
+        }
+        setShopSlug(data.slug)
+        setLoading(false)
+        setSuccessState('counting')
+        setCountdown(COUNTDOWN)
+        timerRef.current = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current!)
+              setSuccessState('done')
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } catch {
+        setError('Грешка при създаването.')
+        setLoading(false)
+      }
+      return
+    }
 
     const slug = slugify(form.name) + '-' + Math.random().toString(36).slice(2, 6)
     const isPaidPlan = planId !== 'free'
@@ -290,6 +338,14 @@ function OpenShopForm() {
         Попълни данните и започни да продаваш
       </p>
 
+      {promo && (
+        <div className="rounded-xl px-4 py-3 mb-8 text-sm"
+          style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: 'var(--accent)' }}>
+          🎁 Имаш <strong>{promo.days} дни безплатно</strong> на план <strong>{promo.planName}</strong> — без карта и без абонамент.
+          След този период магазинът преминава на Free (обявите над лимита се скриват, не се трият).
+        </div>
+      )}
+
       {/* Steps */}
       <div className="flex items-center mb-10">
         {[
@@ -315,7 +371,7 @@ function OpenShopForm() {
                 </div>
                 <span className="text-xs mt-1 whitespace-nowrap hidden sm:block"
                   style={{ color: active ? 'var(--text)' : 'var(--muted)' }}>
-                  {s.n === 1 ? planLabel[planId] ?? 'План' : s.label}
+                  {s.n === 1 ? planLabel[promo?.planId ?? planId ?? ''] ?? 'План' : s.label}
                 </span>
               </div>
               {i < 2 && (

@@ -16,6 +16,11 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaReset, setCaptchaReset] = useState(0)
+  const [hasPromo, setHasPromo] = useState(false)
+
+  useEffect(() => {
+    setHasPromo(!!new URLSearchParams(window.location.search).get('promo'))
+  }, [])
 
   const captchaRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
@@ -89,6 +94,13 @@ export default function RegisterPage() {
             {step === 'form' ? 'Присъедини се към 3DPrintingBG' : 'Последна стъпка преди да влезеш'}
           </p>
         </div>
+
+        {step === 'form' && hasPromo && (
+          <div className="rounded-xl px-4 py-3 mb-4 text-sm text-center"
+            style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: 'var(--accent)' }}>
+            🎁 Регистрираш се с промо линк — след потвърждението ще можеш да отвориш магазин с безплатен период.
+          </div>
+        )}
 
         {step === 'form' ? (
           <form onSubmit={handleSubmit} className="rounded-2xl border p-8 space-y-4"
@@ -210,7 +222,22 @@ function VerifyStep({ email, onBack }: { email: string; onBack: () => void }) {
       return
     }
 
-    router.push('/?registered=1')
+    // Промо линк (/register?promo=КОД) → закачаме промото и водим към отваряне на магазин
+    let dest = '/?registered=1'
+    try {
+      const promo = new URLSearchParams(window.location.search).get('promo')
+      if (promo) {
+        const res = await fetch('/api/promo/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: promo }),
+        })
+        const data = await res.json()
+        if (data.claimed) dest = '/open-shop'
+      }
+    } catch {}
+
+    router.push(dest)
     router.refresh()
   }
 
