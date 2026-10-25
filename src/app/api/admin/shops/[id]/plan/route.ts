@@ -4,10 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { applyPlanLimitAndNotify } from '@/lib/plan-limits'
 
 // Главният админ ръчно назначава план на магазин — без Stripe плащане
-// (напр. подарен/комплиментарен план). Не пипа stripe_subscription_id/
-// stripe_customer_id — ако магазинът вече има реален абонамент, той не
-// се пипа тук; просто billing_interval/plan_expires_at се изчистват,
-// защото плана вече не е обвързан с реално периодично плащане.
+// (напр. подарен/комплиментарен план), с период "от — до". Не пипа
+// stripe_subscription_id/stripe_customer_id. При изтичане на "до" планът
+// се връща на Free автоматично (виж /api/cron/expire-plans).
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { user, role } = await getCurrentUserAndRole()
@@ -24,10 +23,28 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: plan } = await admin.from('plans').select('id').eq('id', planId).maybeSingle()
   if (!plan) return NextResponse.json({ error: 'Няма такъв план.' }, { status: 400 })
 
+  let startsAt: string | null = null
+  let expiresAt: string | null = null
+
+  if (planId !== 'free') {
+    const from = body?.starts_at ? new Date(body.starts_at) : new Date()
+    const to = body?.expires_at ? new Date(body.expires_at) : null
+    if (isNaN(from.getTime()) || (to && isNaN(to.getTime()))) {
+      return NextResponse.json({ error: 'Невалидна дата.' }, { status: 400 })
+    }
+    if (!to) return NextResponse.json({ error: 'Избери крайна дата ("До").' }, { status: 400 })
+    // Крайната дата включва целия ден
+    to.setHours(23, 59, 59, 999)
+    if (to <= from) return NextResponse.json({ error: 'Крайната дата трябва да е след началната.' }, { status: 400 })
+    startsAt = from.toISOString()
+    expiresAt = to.toISOString()
+  }
+
   const { error } = await admin.from('shops').update({
     plan_id: planId,
     billing_interval: null,
-    plan_expires_at: null,
+    plan_starts_at: startsAt,
+    plan_expires_at: expiresAt,
   }).eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -13,6 +13,8 @@ export interface AdminShopRow {
   plan_id: string
   billing_interval: 'monthly' | 'yearly' | null
   stripe_subscription_id: string | null
+  plan_starts_at: string | null
+  plan_expires_at: string | null
   total_sales: number
   created_at: string
   owner_email: string | null
@@ -28,17 +30,46 @@ export function ShopsTable({ shops, plans, isSuperAdmin }: {
 }) {
   const router = useRouter()
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draft, setDraft] = useState({ plan_id: 'free', starts_at: '', expires_at: '' })
+  const [error, setError] = useState('')
 
-  async function changePlan(shopId: string, planId: string) {
+  const toDateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : '')
+  const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('bg-BG') : '—')
+
+  function startEdit(shop: AdminShopRow) {
+    setError('')
+    setEditingId(shop.id)
+    setDraft({
+      plan_id: shop.plan_id,
+      starts_at: toDateInput(shop.plan_starts_at) || new Date().toISOString().slice(0, 10),
+      expires_at: toDateInput(shop.plan_expires_at),
+    })
+  }
+
+  async function savePlan(shopId: string) {
+    setError('')
     setLoadingId(shopId)
-    await fetch(`/api/admin/shops/${shopId}/plan`, {
+    const res = await fetch(`/api/admin/shops/${shopId}/plan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan_id: planId }),
+      body: JSON.stringify({
+        plan_id: draft.plan_id,
+        starts_at: draft.starts_at || null,
+        expires_at: draft.expires_at || null,
+      }),
     })
     setLoadingId(null)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Грешка при запис.')
+      return
+    }
+    setEditingId(null)
     router.refresh()
   }
+
+  const dateStyle = { background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)' }
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
@@ -57,29 +88,71 @@ export function ShopsTable({ shops, plans, isSuperAdmin }: {
                 <td className="px-4 py-3 font-semibold">{shop.name}</td>
                 <td className="px-4 py-3" style={{ color: 'var(--muted)' }}>{shop.owner_email ?? '—'}</td>
                 <td className="px-4 py-3">
-                  {isSuperAdmin ? (
-                    <div className="flex items-center gap-1.5">
+                  {isSuperAdmin && editingId === shop.id ? (
+                    <div className="space-y-1.5" style={{ minWidth: 190 }}>
                       <select
-                        value={shop.plan_id}
-                        disabled={loadingId === shop.id}
-                        onChange={e => changePlan(shop.id, e.target.value)}
-                        className="text-xs px-2 py-1.5 rounded-lg outline-none"
-                        style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                        value={draft.plan_id}
+                        onChange={e => setDraft(d => ({ ...d, plan_id: e.target.value }))}
+                        className="w-full text-xs px-2 py-1.5 rounded-lg outline-none" style={dateStyle}
                       >
                         {plans.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
-                      {!shop.stripe_subscription_id && shop.plan_id !== 'free' && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-                          style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
-                          title="Планът е зададен ръчно от админ, без Stripe плащане">
-                          🎁 ръчно
-                        </span>
+                      {draft.plan_id !== 'free' && (
+                        <>
+                          <label className="flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--muted)' }}>
+                            От
+                            <input type="date" value={draft.starts_at}
+                              onChange={e => setDraft(d => ({ ...d, starts_at: e.target.value }))}
+                              className="text-xs px-2 py-1 rounded-lg outline-none" style={dateStyle} />
+                          </label>
+                          <label className="flex items-center justify-between gap-2 text-xs" style={{ color: 'var(--muted)' }}>
+                            До
+                            <input type="date" value={draft.expires_at}
+                              onChange={e => setDraft(d => ({ ...d, expires_at: e.target.value }))}
+                              className="text-xs px-2 py-1 rounded-lg outline-none" style={dateStyle} />
+                          </label>
+                        </>
                       )}
+                      {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+                      <div className="flex gap-1.5">
+                        <button onClick={() => savePlan(shop.id)} disabled={loadingId === shop.id}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                          style={{ background: 'var(--accent)', color: '#fff', border: 'none', opacity: loadingId === shop.id ? 0.6 : 1 }}>
+                          Запази
+                        </button>
+                        <button onClick={() => setEditingId(null)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg"
+                          style={{ border: '1px solid var(--border)', color: 'var(--muted)', background: 'transparent' }}>
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <span style={{ color: 'var(--muted)' }}>{shop.plan_id}</span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">{plans.find(p => p.id === shop.plan_id)?.name ?? shop.plan_id}</span>
+                        {!shop.stripe_subscription_id && shop.plan_id !== 'free' && (
+                          <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
+                            title="Планът е зададен ръчно от админ, без Stripe плащане">
+                            🎁 ръчно
+                          </span>
+                        )}
+                        {isSuperAdmin && (
+                          <button onClick={() => startEdit(shop)} className="text-xs font-semibold"
+                            style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                            Промени
+                          </button>
+                        )}
+                      </div>
+                      {shop.plan_id !== 'free' && shop.plan_expires_at && (
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+                          {shop.plan_starts_at ? `${fmt(shop.plan_starts_at)} → ` : 'до '}{fmt(shop.plan_expires_at)}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-3" style={{ color: 'var(--muted)' }}>{shop.city ?? '—'}</td>

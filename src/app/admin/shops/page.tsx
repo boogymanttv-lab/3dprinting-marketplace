@@ -14,7 +14,7 @@ export default async function AdminShopsPage() {
   const [{ data: shops }, { data: plans }] = await Promise.all([
     admin
       .from('shops')
-      .select('id, name, slug, city, is_active, plan_id, billing_interval, stripe_subscription_id, total_sales, created_at, owner:profiles(email, full_name)')
+      .select('id, name, slug, city, is_active, plan_id, billing_interval, stripe_subscription_id, plan_starts_at, plan_expires_at, total_sales, created_at, owner:profiles(email, full_name)')
       .order('created_at', { ascending: false }),
     admin.from('plans').select('id, name').order('sort_order'),
   ])
@@ -30,6 +30,8 @@ export default async function AdminShopsPage() {
       plan_id: shop.plan_id,
       billing_interval: shop.billing_interval,
       stripe_subscription_id: shop.stripe_subscription_id,
+      plan_starts_at: shop.plan_starts_at ?? null,
+      plan_expires_at: shop.plan_expires_at ?? null,
       total_sales: shop.total_sales,
       created_at: shop.created_at,
       owner_email: owner?.email ?? null,

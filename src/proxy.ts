@@ -43,6 +43,9 @@ const BLOCK_HTML = `<!DOCTYPE html>
 export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
 
+  // Vercel Cron — защитено с CRON_SECRET в самия route, не минава през host/auth логиката
+  if (request.nextUrl.pathname.startsWith('/api/cron/')) return NextResponse.next()
+
   if (DUPLICATE_HOSTS.has(host)) {
     const url = new URL(request.url)
     url.host = CANONICAL_HOST
