@@ -9,7 +9,8 @@ import { ArchiveButton } from './ArchiveButton'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ListingsPage() {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ limit?: string }> }) {
+  const { limit: limitHit } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?redirectTo=/dashboard/listings')
@@ -58,6 +59,22 @@ export default async function ListingsPage() {
           <Plus size={15} /> Нова обява
         </Link>
       </div>
+
+      {/* Over-limit / hidden-by-plan notice */}
+      {maxListings && (limitHit === '1' || (listings?.filter(l => !l.is_active).length ?? 0) > 0 && activeCount >= maxListings) && (
+        <div className="rounded-xl p-4 mb-6 text-sm flex items-center justify-between gap-3 flex-wrap"
+          style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)' }}>
+          <span>
+            {limitHit === '1'
+              ? `Достигнал си лимита от ${maxListings} активни обяви. Скрий друга обява или надгради плана, за да активираш тази.`
+              : `Част от обявите ти са скрити от сайта, защото планът ти позволява ${maxListings} активни. Не са изтрити — надгради плана, за да ги покажеш.`}
+          </span>
+          <Link href="/plans" className="text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0"
+            style={{ background: 'var(--accent)', color: '#fff', textDecoration: 'none' }}>
+            Надгради плана →
+          </Link>
+        </div>
+      )}
 
       {/* Progress bar */}
       {maxListings && (

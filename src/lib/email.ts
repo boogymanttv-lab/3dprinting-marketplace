@@ -192,6 +192,89 @@ export async function sendStatusUpdate(
   await resend.emails.send({ from: FROM, to: buyerEmail, ...tpl })
 }
 
+export async function sendPlanChanged(
+  ownerEmail: string,
+  data: { ownerName: string; shopName: string; planName: string; maxListings: number | null; hiddenCount: number }
+) {
+  const resend = await getResend()
+  if (!resend) return
+
+  const limitText = data.maxListings === null ? 'безлимитни обяви' : `до ${data.maxListings} активни обяви`
+  const html = `
+    <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0f0f13; color: #f1f0f7; border-radius: 16px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 48px;">💳</div>
+        <h2 style="font-size: 20px; font-weight: 900; margin: 8px 0;">Планът на магазина ти е сменен</h2>
+      </div>
+      <p style="color: #8884a0; margin-bottom: 16px;">
+        Здравей <strong>${data.ownerName}</strong>! Магазин <strong>${data.shopName}</strong> вече е на план <strong style="color: #f97316;">${data.planName}</strong> (${limitText}).
+      </p>
+      ${data.hiddenCount > 0 ? `
+        <div style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+          <p style="margin: 0;"><strong>${data.hiddenCount}</strong> от обявите ти бяха скрити от сайта, защото надвишават лимита на плана. Не са изтрити — надгради плана, за да ги покажеш отново, или избери кои да останат активни от „Мои обяви“.</p>
+        </div>
+      ` : ''}
+      <a href="${APP_URL}/plans" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 10px;">Надгради плана</a>
+      <a href="${APP_URL}/dashboard/listings" style="display: block; text-align: center; color: #f97316; padding: 10px; text-decoration: none; font-weight: 600;">Към „Мои обяви“</a>
+    </div>
+  `
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `💳 Планът на ${data.shopName} е сменен на ${data.planName}`,
+    html,
+  })
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// Масово съобщение от админ панела. Праща се на порции по 100 (Resend batch API),
+// всеки получател получава собствено писмо (адресите не се виждат помежду си).
+export async function sendBroadcast(
+  recipients: string[],
+  subject: string,
+  message: string
+): Promise<{ sent: number; failed: number }> {
+  const resend = await getResend()
+  if (!resend) return { sent: 0, failed: recipients.length }
+
+  const body = escapeHtml(message).replace(/\n/g, '<br>')
+  const html = `
+    <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #0f0f13; color: #f1f0f7; border-radius: 16px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 36px;">🖨️</div>
+        <h1 style="font-size: 22px; font-weight: 900; margin: 8px 0; color: #f97316;">${APP_NAME}</h1>
+      </div>
+      <h2 style="font-size: 18px; margin-bottom: 12px;">${escapeHtml(subject)}</h2>
+      <div style="color: #d4d2e0; line-height: 1.6; margin-bottom: 24px;">${body}</div>
+      <a href="${APP_URL}" style="display: block; text-align: center; background: #f97316; color: #fff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700;">Към сайта</a>
+      <p style="text-align: center; font-size: 11px; color: #8884a0; margin-top: 24px;">
+        Получаваш това съобщение, защото имаш регистрация в ${APP_NAME}. Ако не искаш да получаваш съобщения, пиши ни в отговор на този имейл.
+      </p>
+    </div>
+  `
+
+  let sent = 0
+  let failed = 0
+  for (let i = 0; i < recipients.length; i += 100) {
+    const chunk = recipients.slice(i, i + 100)
+    try {
+      const { error } = await resend.batch.send(
+        chunk.map(to => ({ from: FROM, to, subject, html }))
+      )
+      if (error) failed += chunk.length
+      else sent += chunk.length
+    } catch {
+      failed += chunk.length
+    }
+    // Resend лимит ~2 заявки/сек
+    if (i + 100 < recipients.length) await new Promise(r => setTimeout(r, 600))
+  }
+  return { sent, failed }
+}
+
 export async function sendListingFlagged(
   ownerEmail: string,
   data: { ownerName: string; listingTitle: string; note: string }

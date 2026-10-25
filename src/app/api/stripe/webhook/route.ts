@@ -3,6 +3,7 @@ import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { slugify } from '@/lib/utils'
 import { sendOrderConfirmation } from '@/lib/email'
+import { applyPlanLimitAndNotify } from '@/lib/plan-limits'
 import type Stripe from 'stripe'
 
 export async function POST(request: Request) {
@@ -181,12 +182,15 @@ export async function POST(request: Request) {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
-        await admin.from('shops').update({
+        const { data: downgraded } = await admin.from('shops').update({
           plan_id: 'free',
           stripe_subscription_id: null,
           billing_interval: null,
           plan_expires_at: null,
-        }).eq('stripe_subscription_id', sub.id)
+        }).eq('stripe_subscription_id', sub.id).select('id')
+        for (const s of downgraded ?? []) {
+          await applyPlanLimitAndNotify(admin, s.id)
+        }
         break
       }
 

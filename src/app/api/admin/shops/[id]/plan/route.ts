@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUserAndRole } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { applyPlanLimitAndNotify } from '@/lib/plan-limits'
 
 // Главният админ ръчно назначава план на магазин — без Stripe плащане
 // (напр. подарен/комплиментарен план). Не пипа stripe_subscription_id/
@@ -30,5 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }).eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+
+  const hidden = await applyPlanLimitAndNotify(admin, id)
+  return NextResponse.json({ success: true, hidden })
 }
