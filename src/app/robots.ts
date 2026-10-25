@@ -22,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           '/cart/',
           '/login',
           '/register',
+          '/forgot-password',
         ],
       },
     ],

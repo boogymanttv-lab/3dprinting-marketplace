@@ -251,7 +251,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         {/* RIGHT — Order + Seller */}
         <div className="space-y-4">
           {/* Main Card */}
-          <div className="rounded-2xl border p-5 sticky top-20" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+          <div className="rounded-2xl border p-5" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
             {l.category && (
               <p className="text-xs uppercase tracking-wider mb-1.5" style={{ color: 'var(--muted)' }}>
                 {l.category.name}

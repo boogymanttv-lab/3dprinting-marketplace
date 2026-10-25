@@ -15,12 +15,15 @@ declare global {
 interface TurnstileProps {
   onVerify: (token: string) => void
   onExpire?: () => void
+  // Увеличи тази стойност, за да се рестартира виджетът. Токенът е за еднократна
+  // употреба — след неуспешен опит (грешна парола и т.н.) трябва нов.
+  resetKey?: number
 }
 
 // Cloudflare Turnstile — невидим/лек CAPTCHA виджет.
 // Ако NEXT_PUBLIC_TURNSTILE_SITE_KEY не е зададен, компонентът не рендира
 // нищо (soft-fallback), за да не се чупи регистрацията преди да конфигурираш ключовете.
-export function Turnstile({ onVerify, onExpire }: TurnstileProps) {
+export function Turnstile({ onVerify, onExpire, resetKey = 0 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetId = useRef<string | null>(null)
   const [scriptLoaded, setScriptLoaded] = useState(false)
@@ -35,9 +38,16 @@ export function Turnstile({ onVerify, onExpire }: TurnstileProps) {
       sitekey: siteKey,
       callback: (token: string) => onVerify(token),
       'expired-callback': () => onExpire?.(),
+      'error-callback': () => onExpire?.(),
       theme: 'dark',
     })
   }, [scriptLoaded, siteKey, onVerify, onExpire])
+
+  useEffect(() => {
+    if (resetKey > 0 && widgetId.current && window.turnstile) {
+      window.turnstile.reset(widgetId.current)
+    }
+  }, [resetKey])
 
   if (!siteKey) return null
 

@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaReset, setCaptchaReset] = useState(0)
 
   const captchaRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
@@ -56,7 +57,19 @@ export default function RegisterPage() {
     setLoading(false)
 
     if (error) {
-      setError(error.message)
+      const msg = error.message.toLowerCase()
+      if (error.code === 'user_already_exists' || msg.includes('already registered')) {
+        setError('Този имейл вече е регистриран. Влез или използвай „Забравена парола“.')
+      } else if (error.code === 'captcha_failed' || msg.includes('captcha')) {
+        setError('Проверката „не съм робот“ не успя. Опитай отново.')
+      } else if (error.status === 429 || error.code === 'over_email_send_rate_limit' || error.code === 'over_request_rate_limit') {
+        setError('Твърде много опити. Изчакай малко и опитай пак.')
+      } else {
+        setError(error.message)
+      }
+      // Токенът е за еднократна употреба — нужен е нов след неуспешен опит
+      setCaptchaToken(null)
+      setCaptchaReset(k => k + 1)
       return
     }
 
@@ -131,7 +144,7 @@ export default function RegisterPage() {
               </span>
             </label>
 
-            <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
+            <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} resetKey={captchaReset} />
 
             <button
               type="submit"

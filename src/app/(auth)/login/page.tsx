@@ -23,6 +23,7 @@ function LoginForm() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaReset, setCaptchaReset] = useState(0)
 
   const captchaRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
@@ -49,9 +50,16 @@ function LoginForm() {
         setError('Имейлът ти още не е потвърден. Провери пощата си за линк за потвърждение.')
       } else if (error.code === 'invalid_credentials') {
         setError('Грешен имейл или парола.')
+      } else if (error.code === 'captcha_failed' || error.message.toLowerCase().includes('captcha')) {
+        setError('Проверката „не съм робот“ не успя. Опитай отново.')
+      } else if (error.status === 429 || error.code === 'over_request_rate_limit') {
+        setError('Твърде много опити. Изчакай малко и опитай пак.')
       } else {
-        setError(error.message)
+        setError('Грешка при влизане. Опитай отново.')
       }
+      // Токенът е за еднократна употреба — нужен е нов след всеки неуспешен опит
+      setCaptchaToken(null)
+      setCaptchaReset(k => k + 1)
       setLoading(false)
       return
     }
@@ -118,7 +126,13 @@ function LoginForm() {
             />
           </div>
 
-          <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
+          <Turnstile onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} resetKey={captchaReset} />
+
+          <div className="text-right -mt-1">
+            <Link href="/forgot-password" className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
+              Забравена парола?
+            </Link>
+          </div>
 
           <button
             type="submit"
