@@ -163,6 +163,7 @@ export async function POST(request: Request) {
             plan_id: planId,
             stripe_subscription_id: subscriptionId,
             billing_interval: interval ?? null,
+            plan_starts_at: null,
             plan_expires_at: periodEnd,
           }).eq('id', meta.shop_id)
         }

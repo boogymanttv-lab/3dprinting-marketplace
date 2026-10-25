@@ -33,6 +33,16 @@ function OpenShopForm() {
   const [promo, setPromo] = useState<{ planId: string; planName: string; days: number } | null>(null)
   const [promoChecked, setPromoChecked] = useState(false)
 
+  // Който вече има магазин, няма какво да отваря — водим го към таблото
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data: shop } = await supabase.from('shops').select('id').eq('owner_id', user.id).maybeSingle()
+      if (shop) router.replace('/dashboard')
+    })
+  }, [])
+
   useEffect(() => {
     fetch('/api/promo/status')
       .then(r => r.json())

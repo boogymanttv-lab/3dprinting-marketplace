@@ -5,8 +5,40 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import type { Plan, BillingInterval } from '@/types'
 
-export function PlansGrid({ plans }: { plans: Plan[] }) {
+export interface PlansShop {
+  id: string
+  planId: string
+  hasSubscription: boolean   // има активен Stripe абонамент
+  expiresAt: string | null
+}
+
+export function PlansGrid({ plans, shop = null }: { plans: Plan[]; shop?: PlansShop | null }) {
   const [interval, setInterval] = useState<BillingInterval>('monthly')
+  const [busyPlan, setBusyPlan] = useState<string | null>(null)
+  const [error, setError] = useState('')
+
+  // Магазинът вече съществува → надграждане през Stripe Checkout (без активен абонамент)
+  // или през Stripe портала (ако вече има абонамент — иначе ще се плаща два пъти).
+  async function changePlan(planId: string) {
+    if (!shop) return
+    setError('')
+    setBusyPlan(planId)
+    try {
+      const res = shop.hasSubscription
+        ? await fetch('/api/stripe/portal', { method: 'POST' })
+        : await fetch('/api/stripe/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planId, interval, shopId: shop.id }),
+          })
+      const data = await res.json()
+      if (data.url) { window.location.href = data.url; return }
+      setError(data.error || 'Грешка при връзка със Stripe.')
+    } catch {
+      setError('Грешка при връзка със Stripe.')
+    }
+    setBusyPlan(null)
+  }
 
   return (
     <>
@@ -41,6 +73,19 @@ export function PlansGrid({ plans }: { plans: Plan[] }) {
           ))}
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-center mb-4 rounded-lg px-4 py-2.5 max-w-xl mx-auto"
+          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>{error}</p>
+      )}
+      {shop && (
+        <p className="text-sm text-center mb-6" style={{ color: 'var(--muted)' }}>
+          Магазинът ти е на план <strong style={{ color: 'var(--text)' }}>{plans.find(p => p.id === shop.planId)?.name ?? shop.planId}</strong>
+          {shop.expiresAt && shop.planId !== 'free' && !shop.hasSubscription
+            ? ` · важи до ${new Date(shop.expiresAt).toLocaleDateString('bg-BG')}` : ''}
+          . Можеш да го надградиш или смениш по-долу.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-left">
         {plans.map(plan => {
@@ -101,18 +146,48 @@ export function PlansGrid({ plans }: { plans: Plan[] }) {
                 </ul>
               </div>
 
-              <Link
-                href={href}
-                className="block text-center py-2.5 rounded-xl text-sm font-bold mt-auto transition-opacity"
-                style={{
-                  background: isPro ? 'var(--accent)' : 'transparent',
-                  color: isPro ? '#fff' : 'var(--text)',
-                  border: isPro ? 'none' : '1px solid var(--border)',
-                  textDecoration: 'none',
-                }}
-              >
-                {isFree ? 'Започни безплатно →' : 'Избери →'}
-              </Link>
+              {shop ? (
+                plan.id === shop.planId ? (
+                  <div className="text-center py-2.5 rounded-xl text-sm font-bold mt-auto"
+                    style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
+                    ✓ Текущ план
+                  </div>
+                ) : isFree ? (
+                  <Link href="/dashboard/settings"
+                    className="block text-center py-2.5 rounded-xl text-sm font-bold mt-auto"
+                    style={{ border: '1px solid var(--border)', color: 'var(--muted)', textDecoration: 'none' }}>
+                    Управление →
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => changePlan(plan.id)}
+                    disabled={busyPlan !== null}
+                    className="block w-full text-center py-2.5 rounded-xl text-sm font-bold mt-auto transition-opacity"
+                    style={{
+                      background: isPro ? 'var(--accent)' : 'transparent',
+                      color: isPro ? '#fff' : 'var(--text)',
+                      border: isPro ? 'none' : '1px solid var(--border)',
+                      cursor: 'pointer',
+                      opacity: busyPlan !== null ? 0.6 : 1,
+                    }}
+                  >
+                    {busyPlan === plan.id ? 'Зареждане...' : shop.hasSubscription ? 'Смени плана →' : 'Надгради →'}
+                  </button>
+                )
+              ) : (
+                <Link
+                  href={href}
+                  className="block text-center py-2.5 rounded-xl text-sm font-bold mt-auto transition-opacity"
+                  style={{
+                    background: isPro ? 'var(--accent)' : 'transparent',
+                    color: isPro ? '#fff' : 'var(--text)',
+                    border: isPro ? 'none' : '1px solid var(--border)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {isFree ? 'Започни безплатно →' : 'Избери →'}
+                </Link>
+              )}
             </div>
           )
         })}

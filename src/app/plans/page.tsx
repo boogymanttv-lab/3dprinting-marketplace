@@ -23,6 +23,12 @@ export default async function PlansPage({
     .select('*')
     .order('sort_order')
 
+  // Ако потребителят вече има магазин, планът е смяна/надграждане, не отваряне на нов магазин
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: myShop } = user
+    ? await supabase.from('shops').select('id, plan_id, stripe_subscription_id, plan_expires_at').eq('owner_id', user.id).maybeSingle()
+    : { data: null }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       {cancelled && (
@@ -34,8 +40,8 @@ export default async function PlansPage({
         </div>
       )}
 
-      {/* Progress steps */}
-      <div className="flex items-center justify-center gap-0 mb-10">
+      {/* Progress steps — само при отваряне на нов магазин */}
+      <div className={myShop ? 'hidden' : 'flex items-center justify-center gap-0 mb-10'}>
         {[
           { n: 1, label: 'Избери план' },
           { n: 2, label: 'Основна информация' },
@@ -71,7 +77,15 @@ export default async function PlansPage({
         </p>
       </div>
 
-      <PlansGrid plans={(plans ?? []) as Plan[]} />
+      <PlansGrid
+        plans={(plans ?? []) as Plan[]}
+        shop={myShop ? {
+          id: myShop.id,
+          planId: myShop.plan_id,
+          hasSubscription: !!myShop.stripe_subscription_id,
+          expiresAt: myShop.plan_expires_at,
+        } : null}
+      />
 
       <p className="text-xs text-center mt-8" style={{ color: 'var(--muted)' }}>
         💳 Плащането се обработва сигурно през Stripe. Можеш да смениш или отмениш плана си по всяко време.
