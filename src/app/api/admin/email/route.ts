@@ -5,7 +5,7 @@ import { sendBroadcast } from '@/lib/email'
 
 export const maxDuration = 60
 
-type Audience = 'all' | 'sellers' | 'test'
+type Audience = 'all' | 'sellers' | 'buyers' | 'test'
 
 // Масов имейл до регистрираните потребители — само super_admin.
 export async function POST(request: Request) {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const message = String(body?.message ?? '').trim()
   const audience = body?.audience as Audience
   if (!subject || !message) return NextResponse.json({ error: 'Попълни тема и съобщение.' }, { status: 400 })
-  if (!['all', 'sellers', 'test'].includes(audience)) return NextResponse.json({ error: 'Невалидна аудитория.' }, { status: 400 })
+  if (!['all', 'sellers', 'buyers', 'test'].includes(audience)) return NextResponse.json({ error: 'Невалидна аудитория.' }, { status: 400 })
 
   const admin = createAdminClient()
   let recipients: string[] = []
@@ -34,10 +34,10 @@ export async function POST(request: Request) {
       .not('email', 'is', null)
 
     let ids = new Set((profiles ?? []).map(p => p.id))
-    if (audience === 'sellers') {
+    if (audience === 'sellers' || audience === 'buyers') {
       const { data: shops } = await admin.from('shops').select('owner_id')
       const owners = new Set((shops ?? []).map(s => s.owner_id))
-      ids = new Set([...ids].filter(id => owners.has(id)))
+      ids = new Set([...ids].filter(id => (audience === 'sellers' ? owners.has(id) : !owners.has(id))))
     }
     recipients = [...new Set(
       (profiles ?? []).filter(p => ids.has(p.id) && p.email).map(p => p.email as string)

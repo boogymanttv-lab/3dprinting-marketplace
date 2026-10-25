@@ -2,19 +2,21 @@
 
 import { useState } from 'react'
 
-interface Props { allCount: number; sellersCount: number }
+interface Props { allCount: number; sellersCount: number; buyersCount: number }
 
-export function EmailComposer({ allCount, sellersCount }: Props) {
-  const [audience, setAudience] = useState<'all' | 'sellers'>('all')
+type AudienceKey = 'all' | 'sellers' | 'buyers'
+
+export function EmailComposer({ allCount, sellersCount, buyersCount }: Props) {
+  const [audience, setAudience] = useState<AudienceKey>('all')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null)
 
-  const count = audience === 'all' ? allCount : sellersCount
+  const count = audience === 'all' ? allCount : audience === 'sellers' ? sellersCount : buyersCount
   const inputStyle = { background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)' }
 
-  async function send(target: 'test' | 'all' | 'sellers') {
+  async function send(target: 'test' | AudienceKey) {
     setResult(null)
     if (!subject.trim() || !message.trim()) {
       setResult({ ok: false, text: 'Попълни тема и съобщение.' })
@@ -45,8 +47,12 @@ export function EmailComposer({ allCount, sellersCount }: Props) {
     <div className="rounded-2xl border p-5 space-y-4 max-w-2xl" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
       <div>
         <label className="text-xs font-semibold block mb-2" style={{ color: 'var(--muted)' }}>Получатели</label>
-        <div className="flex gap-2">
-          {([['all', `Всички (${allCount})`], ['sellers', `Само продавачи (${sellersCount})`]] as const).map(([key, label]) => (
+        <div className="flex gap-2 flex-wrap">
+          {([
+            ['all', `Всички (${allCount})`],
+            ['sellers', `Само продавачи (${sellersCount})`],
+            ['buyers', `Всички без магазини (${buyersCount})`],
+          ] as const).map(([key, label]) => (
             <button key={key} type="button" onClick={() => setAudience(key)}
               className="px-4 py-2 rounded-xl text-xs font-semibold"
               style={{

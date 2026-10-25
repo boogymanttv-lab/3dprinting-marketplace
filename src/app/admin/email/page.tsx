@@ -20,6 +20,8 @@ export default async function AdminEmailPage() {
   const allCount = new Set((profiles ?? []).map(p => p.email)).size
   const sellersCount = new Set((profiles ?? []).filter(p => owners.has(p.id)).map(p => p.email)).size
 
+  const buyersCount = new Set((profiles ?? []).filter(p => !owners.has(p.id)).map(p => p.email)).size
+
   return (
     <div>
       <div className="mb-5">
@@ -28,7 +30,7 @@ export default async function AdminEmailPage() {
           Изпрати съобщение до регистрираните потребители. Първо прати тест на себе си.
         </p>
       </div>
-      <EmailComposer allCount={allCount} sellersCount={sellersCount} />
+      <EmailComposer allCount={allCount} sellersCount={sellersCount} buyersCount={buyersCount} />
     </div>
   )
 }
