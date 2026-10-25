@@ -79,7 +79,6 @@ export function CreditsClient({ balance, topupStatus, services, listings, txs, o
         <div>
           <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--muted)' }}>Твоят баланс</p>
           <p className="text-4xl font-black" style={{ color: 'var(--accent)' }}>{formatCredits(balance)}</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>≈ {(balance / 100).toFixed(2)} €</p>
         </div>
         <p className="text-xs max-w-xs" style={{ color: 'var(--muted)' }}>
           Кредитите се използват само за услуги в 3DPrintingBG. Не се теглят и не се връщат в пари.

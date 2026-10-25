@@ -30,8 +30,7 @@ export default async function CreditsPage({ searchParams }: { searchParams: Prom
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-2xl font-black">💎 Кредити</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>{shop.name} · 100 кредита = 1 €</p>
+          <h1 className="text-2xl font-black">💎 Кредити и промоции</h1>
         </div>
       </div>
 

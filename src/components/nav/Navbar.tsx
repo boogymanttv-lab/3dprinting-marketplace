@@ -8,7 +8,7 @@ import { CartButton } from '@/components/cart/CartButton'
 import type { User } from '@supabase/supabase-js'
 import {
   Home, Store, MessageCircle, User as UserIcon,
-  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart, Shield, ClipboardList
+  Plus, LogOut, LayoutDashboard, Settings, ChevronDown, Package, Heart, Shield, ClipboardList, Gem
 } from 'lucide-react'
 
 export function Navbar() {
@@ -17,6 +17,7 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
   const [hasShop, setHasShop] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -35,7 +36,14 @@ export function Navbar() {
   // (e.g. right after creating a shop) — Navbar stays mounted across
   // client-side navigation, so this can't just run once on mount.
   useEffect(() => {
-    if (!user) { setHasShop(false); setIsAdmin(false); return }
+    if (!user) { setHasShop(false); setIsAdmin(false); setCredits(null); return }
+
+    supabase
+      .from('credit_balances')
+      .select('balance')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => setCredits(data?.balance ?? 0))
 
     supabase
       .from('shops')
@@ -207,6 +215,21 @@ export function Navbar() {
                           >
                             <LayoutDashboard size={15} />
                             Моят магазин
+                          </Link>
+                        )}
+
+                        {hasShop && (
+                          <Link
+                            href="/dashboard/credits"
+                            onClick={() => setDropdownOpen(false)}
+                            className="dropdown-item"
+                          >
+                            <Gem size={15} />
+                            <span className="flex-1">Кредити</span>
+                            <span className="text-xs font-black px-2 py-0.5 rounded-full"
+                              style={{ background: 'rgba(249,115,22,0.15)', color: 'var(--accent)' }}>
+                              {(credits ?? 0).toLocaleString('bg-BG')}
+                            </span>
                           </Link>
                         )}
 
