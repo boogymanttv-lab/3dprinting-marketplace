@@ -30,6 +30,12 @@ export function Turnstile({ onVerify, onExpire, resetKey = 0 }: TurnstileProps) 
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
+  // Скриптът може вече да е зареден от предишна страница (клиентска навигация) —
+  // тогава onLoad не се задейства отново, затова проверяваме директно.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.turnstile) setScriptLoaded(true)
+  }, [])
+
   useEffect(() => {
     if (!scriptLoaded || !containerRef.current || !siteKey || !window.turnstile) return
     if (widgetId.current) return
@@ -56,7 +62,7 @@ export function Turnstile({ onVerify, onExpire, resetKey = 0 }: TurnstileProps) 
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
-        onLoad={() => setScriptLoaded(true)}
+        onReady={() => setScriptLoaded(true)}
       />
       <div ref={containerRef} />
     </>
